@@ -1,16 +1,23 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+function requirePublicConfig() {
+  const { url, anonKey, configured } = getSupabasePublicConfig();
+  if (!configured) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable."
+    );
+  }
+  return { url, anonKey };
+}
 
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
+  const { url, anonKey } = requirePublicConfig();
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(url, anonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -33,7 +40,8 @@ export async function createServerSupabaseClient() {
  * account without replacing the Admin's own active cookie session.
  */
 export function createEphemeralAuthClient() {
-  return createSupabaseJsClient(supabaseUrl, supabaseAnonKey, {
+  const { url, anonKey } = requirePublicConfig();
+  return createSupabaseJsClient(url, anonKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -41,4 +49,3 @@ export function createEphemeralAuthClient() {
     },
   });
 }
-

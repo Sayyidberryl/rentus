@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getServerRbacContext } from "@/lib/rbac";
 
 export async function GET() {
+  if (!getSupabasePublicConfig().configured) {
+    return NextResponse.json(
+      {
+        error:
+          "Missing Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).",
+      },
+      { status: 503 }
+    );
+  }
+
   const supabase = await createServerSupabaseClient();
   const [itemsRes, settingsRes, rbac] = await Promise.all([
     supabase
