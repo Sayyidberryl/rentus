@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #192b49;
+  --muted: #64748b;
+  --blue: #4169a8;
+  --blue-dark: #2f528d;
+  --blue-soft: #eaf0fb;
+  --yellow: #f2cc63;
+  --yellow-soft: #fff5d8;
+  --paper: #ffffff;
+  --canvas: #f7f8fc;
+  --surface-subtle: #f1f5fb;
+  --line: #e4e9f2;
+  --shadow: 0 12px 35px rgba(36, 59, 96, 0.08);
+  --success-bg: #e2f4e9;
+  --success-ink: #1d633f;
+  --danger-bg: #fdebec;
+  --danger-ink: #a6323f;
+  --warn-bg: #fff5d8;
+  --warn-ink: #735714;
+}
+
+[data-theme="dark"] {
+  --ink: #e8eef9;
+  --muted: #9eb0c8;
+  --blue: #7aa5f2;
+  --blue-dark: #5e8ce2;
+  --blue-soft: #22324d;
+  --yellow: #f2cc63;
+  --yellow-soft: #3c331d;
+  --paper: #192334;
+  --canvas: #101723;
+  --surface-subtle: #1e2a3e;
+  --line: #2a374e;
+  --shadow: 0 14px 40px rgba(0, 0, 0, 0.34);
+  --success-bg: #173a2b;
+  --success-ink: #82e3b0;
+  --danger-bg: #3f1d24;
+  --danger-ink: #f8a2ab;
+  --warn-bg: #3c331d;
+  --warn-ink: #f6d983;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: clip;
+  }
+
+  body {
+    overflow-x: clip;
+    background-color: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  img,
+  svg {
+    max-width: 100%;
+  }
+}
+
+.font-mono-num {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.tone-blue {
+  background: #e4edfc;
+}
+.tone-yellow {
+  background: #fff1c9;
+}
+.tone-green {
+  background: #e1f0e8;
+}
+.tone-pink {
+  background: #f5e7f2;
+}
+.tone-lavender {
+  background: #eae7fa;
+}
+.tone-peach {
+  background: #fbe8db;
+}
+
+[data-theme="dark"] .tone-blue {
+  background: #23334f;
+}
+[data-theme="dark"] .tone-yellow {
+  background: #3a3320;
+}
+[data-theme="dark"] .tone-green {
+  background: #1f392d;
+}
+[data-theme="dark"] .tone-pink {
+  background: #382738;
+}
+[data-theme="dark"] .tone-lavender {
+  background: #2b2944;
+}
+[data-theme="dark"] .tone-peach {
+  background: #3f2d24;
+}

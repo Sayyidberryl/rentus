@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#f7f8fc" />
+<title>RentUs — Campus rentals, made easy</title>
+<style>
+  :root {
+    --ink: #192b49;
+    --muted: #6f7d91;
+    --blue: #4169a8;
+    --blue-dark: #2f528d;
+    --blue-soft: #eaf0fb;
+    --yellow: #f2cc63;
+    --yellow-soft: #fff5d8;
+    --paper: #ffffff;
+    --canvas: #f7f8fc;
+    --line: #e8ecf3;
+    --shadow: 0 12px 35px rgba(36, 59, 96, .07);
+    --radius: 20px;
+  }
+
+  [data-theme="dark"] {
+    --ink: #e7edf8; --muted: #aab6c9; --blue: #8db2f5; --blue-dark: #7199e2;
+    --blue-soft: #263753; --yellow: #f2cc63; --yellow-soft: #493e23;
+    --paper: #202b3c; --canvas: #141c29; --line: #303c4f; --shadow: 0 12px 35px rgba(0,0,0,.22);
+  }
+  [data-theme="dark"] header { background: rgba(24,33,47,.94); }
+  [data-theme="dark"] .nav-links { color: #b8c3d5; }
+  [data-theme="dark"] .art-card, [data-theme="dark"] .float-tag, [data-theme="dark"] .search-wrap,
+  [data-theme="dark"] .category, [data-theme="dark"] .filter, [data-theme="dark"] .listing,
+  [data-theme="dark"] .empty-state, [data-theme="dark"] .step, [data-theme="dark"] .modal {
+    background: #202b3c; color: var(--ink); border-color: var(--line);
+  }
+  [data-theme="dark"] .how { background: #1a2637; }
+  [data-theme="dark"] .category-emoji { background: #2c394d; }
+  [data-theme="dark"] .field input, [data-theme="dark"] .field select, [data-theme="dark"] .field textarea {
+    background: #182333; color: var(--ink); border-color: #3a4960;
+  }
+  [data-theme="dark"] .close-modal { background: #2c394d; color: var(--ink); }
+  [data-theme="dark"] .listing-bottom { border-color: var(--line); }
+  .settings-panel { display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:60; width:min(420px, calc(100vw - 28px)); padding:24px; border:1px solid var(--line); border-radius:20px; background:var(--paper); color:var(--ink); box-shadow:0 25px 90px #13274645; }
+  .settings-panel.open { display:block; animation:popIn .18s ease-out; }
+  .settings-scrim { display:none; position:fixed; inset:0; z-index:55; background:#17284270; }
+  .settings-scrim.open { display:block; }
+  @keyframes popIn { from {opacity:0; transform:translate(-50%,-48%) scale(.98)} to {opacity:1; transform:translate(-50%,-50%) scale(1)} }
+  .settings-panel .settings-title { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:1.2rem; }
+  .settings-close { border:0; border-radius:9px; width:34px; height:34px; background:var(--blue-soft); color:var(--ink); font-size:1.2rem; }
+  .settings-panel .setting-row { padding:12px 0; border-top:1px solid var(--line); }
+  .settings-panel .setting-row select { width:150px; }
+  .settings-panel.open { display:block; }
+  .setting-row { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:14px; }
+  .setting-row label { font-weight:700; font-size:.9rem; }
+  .setting-row select { max-width:145px; padding:8px; border:1px solid var(--line); border-radius:9px; color:var(--ink); background:var(--canvas); }
+  [data-theme="dark"] .btn-quiet { color:var(--ink); }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  .container { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+  header { background: rgba(255,255,255,.92); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(14px); }
+  .nav { height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 850; letter-spacing: -.7px; font-size: 1.35rem; }
+  .brand-mark { width: 35px; height: 35px; border-radius: 12px; display: grid; place-items: center; background: var(--blue); color: white; font-size: 1.05rem; box-shadow: 0 5px 12px #4169a833; }
+  .brand span:last-child { color: var(--blue); }
+  .nav-links { display: flex; gap: 28px; color: #5e6d83; font-size: .92rem; font-weight: 600; }
+  .nav-links a:hover { color: var(--blue); }
+  .nav-actions { display: flex; gap: 10px; align-items: center; }
+  .btn { border: 0; border-radius: 12px; padding: 12px 17px; font-weight: 750; transition: transform .18s, background .18s, box-shadow .18s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { color: white; background: var(--blue); box-shadow: 0 7px 15px #4169a826; }
+  .btn-primary:hover { background: var(--blue-dark); }
+  .btn-quiet { color: var(--ink); background: transparent; }
+  .btn-quiet:hover { background: var(--blue-soft); }
+  .btn-yellow { color: #493a16; background: var(--yellow); }
+  .hero { padding: 62px 0 36px; }
+  .hero-grid { display: grid; grid-template-columns: 1.08fr .92fr; align-items: center; gap: 40px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--blue); background: var(--blue-soft); border-radius: 999px; padding: 8px 12px; font-size: .78rem; font-weight: 800; letter-spacing: .2px; }
+  .eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: #68a78d; }
+  h1 { font-size: clamp(2.55rem, 5vw, 4.45rem); line-height: 1.04; letter-spacing: -2.9px; margin: 20px 0 18px; max-width: 650px; }
+  h1 .highlight { position: relative; white-space: nowrap; z-index: 0; }
+  h1 .highlight:after { content: ""; position: absolute; height: 13px; left: 0; right: 0; bottom: 2px; background: var(--yellow); opacity: .78; z-index: -1; border-radius: 5px; transform: rotate(-1.5deg); }
+  .hero-copy { color: var(--muted); font-size: 1.08rem; line-height: 1.75; max-width: 520px; margin: 0 0 25px; }
+  .hero-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+  .trust-row { display: flex; align-items: center; gap: 12px; margin-top: 27px; color: var(--muted); font-size: .84rem; }
+  .avatar-stack { display: flex; padding-left: 5px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--canvas); margin-left: -5px; display: grid; place-items: center; font-size: .72rem; background: #dce7fa; }
+  .avatar:nth-child(2) { background: #ffe6b5; }.avatar:nth-child(3) { background: #d9eee4; }.avatar:nth-child(4) { background: #f2dff1; }
+  .hero-art { min-height: 365px; background: linear-gradient(145deg, #eaf0fb 0%, #f8f2df 100%); border-radius: 30px; position: relative; overflow: hidden; display: grid; place-items: center; }
+  .hero-art:before, .hero-art:after { content: ""; position: absolute; border-radius: 50%; border: 1px solid #ffffffa6; }
+  .hero-art:before { width: 300px; height: 300px; right: -80px; top: -100px; }
+  .hero-art:after { width: 240px; height: 240px; left: -90px; bottom: -120px; }
+  .art-card { width: min(280px, 72%); background: white; padding: 16px; border-radius: 22px; box-shadow: 0 24px 60px #263e6520; position: relative; z-index: 1; transform: rotate(-4deg); }
+  .art-photo { height: 175px; border-radius: 15px; background: #dbe6f6; display: grid; place-items: center; font-size: 5.2rem; position: relative; overflow: hidden; }
+  .art-photo:before { content: ""; width: 180px; height: 180px; position: absolute; background: #f4d26f; border-radius: 50%; right: -40px; top: -65px; opacity: .72; }
+  .art-photo span { position: relative; filter: drop-shadow(0 9px 4px #263e6520); }
+  .art-card-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 2px 2px; }
+  .art-card-row strong { display: block; font-size: .97rem; }
+  .art-card-row small { color: var(--muted); display: block; margin-top: 4px; }
+  .price { font-weight: 850; color: var(--blue); white-space: nowrap; }
+  .float-tag { position: absolute; z-index: 2; background: white; border-radius: 14px; box-shadow: var(--shadow); padding: 12px 14px; font-size: .82rem; font-weight: 800; }
+  .float-tag small { display: block; color: var(--muted); font-weight: 500; margin-top: 3px; }
+  .tag-top { top: 45px; left: 20px; transform: rotate(4deg); }
+  .tag-bottom { right: 18px; bottom: 35px; transform: rotate(3deg); }
+  .search-wrap { margin-top: 26px; background: white; padding: 10px; border: 1px solid var(--line); border-radius: 17px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 25px #263e6508; max-width: 620px; }
+  .search-icon { font-size: 1.15rem; padding-left: 9px; }
+  .search-wrap input { flex: 1; border: 0; outline: 0; min-width: 0; padding: 8px 0; color: var(--ink); background: transparent; }
+  .search-wrap input::placeholder { color: #9aa5b5; }
+  .section { padding: 35px 0 50px; }
+  .section-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 22px; }
+  .section-kicker { color: var(--blue); text-transform: uppercase; font-size: .72rem; font-weight: 850; letter-spacing: 1.4px; margin-bottom: 8px; }
+  h2 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.15rem); letter-spacing: -1px; }
+  .section-sub { margin: 8px 0 0; color: var(--muted); font-size: .94rem; }
+  .text-link { border: 0; background: none; color: var(--blue); font-weight: 800; padding: 8px 0; white-space: nowrap; }
+  .categories { display: grid; grid-template-columns: repeat(6, 1fr); gap: 13px; }
+  .category { border: 1px solid var(--line); background: white; border-radius: 17px; padding: 18px 10px; text-align: center; transition: .2s; color: var(--ink); }
+  .category:hover, .category.active { border-color: #9eb5df; background: var(--blue-soft); transform: translateY(-2px); }
+  .category-emoji { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 15px; background: #f5f7fb; font-size: 1.55rem; margin: 0 auto 11px; }
+  .category strong { display: block; font-size: .87rem; }
+  .category small { display: block; color: var(--muted); margin-top: 5px; font-size: .75rem; }
+  .listing-section { padding-top: 15px; }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+  .filter { border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; color: #68778d; background: white; font-size: .82rem; font-weight: 700; }
+  .filter.active, .filter:hover { color: var(--blue); background: var(--blue-soft); border-color: #d7e1f5; }
+  .listing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .listing { background: white; border: 1px solid var(--line); border-radius: 19px; overflow: hidden; transition: transform .2s, box-shadow .2s; min-width: 0; }
+  .listing:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .listing-image { height: 175px; display: grid; place-items: center; font-size: 4rem; position: relative; overflow: hidden; }
+  .listing-image:before { content: ""; position: absolute; width: 130px; height: 130px; border-radius: 50%; background: #ffffff65; right: -25px; bottom: -55px; }
+  .listing-image span { position: relative; filter: drop-shadow(0 8px 5px #172b451a); }
+  .listing-image.blue { background: #e4edfc; }.listing-image.yellow { background: #fff1c9; }.listing-image.green { background: #e1f0e8; }.listing-image.pink { background: #f5e7f2; }.listing-image.lavender { background: #eae7fa; }.listing-image.peach { background: #fbe8db; }
+  .condition { position: absolute; left: 12px; top: 12px; background: #ffffffdf; padding: 6px 9px; border-radius: 999px; font-size: .68rem; font-weight: 800; color: #516078; }
+  .heart { position: absolute; right: 11px; top: 10px; border: 0; background: #ffffffdf; width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; color: #617087; }
+  .heart.saved { color: #d85e6b; background: white; }
+  .listing-body { padding: 15px; }
+  .listing-type { color: var(--blue); font-size: .7rem; font-weight: 850; text-transform: uppercase; letter-spacing: .8px; }
+  .listing h3 { margin: 7px 0 8px; font-size: 1rem; letter-spacing: -.25px; }
+  .listing-meta { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .78rem; }
+  .listing-bottom { border-top: 1px solid #f0f2f7; margin-top: 14px; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .listing-price { font-weight: 850; font-size: 1rem; }
+  .listing-price small { color: var(--muted); font-size: .72rem; font-weight: 500; }
+  .details-btn { border: 0; border-radius: 10px; background: var(--blue-soft); color: var(--blue); padding: 9px 11px; font-size: .78rem; font-weight: 800; }
+  .details-btn:hover { background: #dce7fa; }
+  .empty-state { grid-column: 1/-1; text-align: center; padding: 50px 20px; border: 1px dashed #cbd5e4; border-radius: 18px; background: white; color: var(--muted); }
+  .how { padding: 52px 0; background: #eef3fb; margin-top: 15px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 28px; }
+  .step { background: white; padding: 23px; border-radius: 18px; border: 1px solid #e3eaf6; }
+  .step-num { width: 37px; height: 37px; border-radius: 12px; background: var(--yellow-soft); display: grid; place-items: center; color: #6b541c; font-weight: 900; }
+  .step h3 { margin: 17px 0 8px; font-size: 1.05rem; }
+  .step p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.65; }
+  .cta { padding: 58px 0; }
+  .cta-box { background: var(--blue); color: white; border-radius: 25px; padding: 35px 38px; display: flex; align-items: center; justify-content: space-between; gap: 25px; overflow: hidden; position: relative; }
+  .cta-box:after { content: ""; position: absolute; right: 15%; top: -100px; width: 260px; height: 260px; border: 1px solid #ffffff2c; border-radius: 50%; }
+  .cta-box h2 { max-width: 540px; font-size: clamp(1.65rem, 3vw, 2.3rem); }
+  .cta-box p { color: #dce7f8; margin: 10px 0 0; line-height: 1.6; }
+  .cta-box .btn { flex-shrink: 0; position: relative; z-index: 1; }
+  footer { border-top: 1px solid var(--line); padding: 25px 0; color: var(--muted); font-size: .82rem; }
+  .footer-inner { display: flex; justify-content: space-between; gap: 18px; align-items: center; }
+  .footer-links { display: flex; gap: 18px; }
+  .notice { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 120px); opacity: 0; transition: .3s; background: #1f3455; color: white; border-radius: 13px; padding: 13px 18px; box-shadow: var(--shadow); z-index: 50; font-size: .9rem; max-width: calc(100% - 32px); text-align: center; }
+  .notice.show { transform: translate(-50%, 0); opacity: 1; }
+  .modal-backdrop { position: fixed; inset: 0; background: #17284270; display: none; align-items: center; justify-content: center; padding: 18px; z-index: 30; }
+  .modal-backdrop.open { display: flex; }
+  .modal { width: min(760px, 100%); background: var(--paper); color:var(--ink); border-radius: 22px; padding: 28px; box-shadow: 0 25px 80px #13274630; max-height: 92vh; overflow: auto; }
+  .modal-head h2 { margin:0; }
+  .listing-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 18px; }
+  .field.full-width { grid-column:1/-1; }
+  .field input[type="file"] { padding:10px; }
+  .image-preview { display:none; width:100%; max-height:220px; object-fit:contain; border:1px dashed var(--line); border-radius:12px; margin-top:10px; background:var(--canvas); }
+  .image-preview.visible { display:block; }
+  .listing-photo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+
+  .account-chip { color:var(--blue); font-weight:800; font-size:.82rem; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .modal-backdrop.payment-layer { z-index:40; }
+  .modal-backdrop.auth-layer { z-index:45; }
+  .modal-backdrop.rentals-layer { z-index:35; }
+  .modal.wide-modal { width:min(680px,100%); }
+  .summary-box { background:var(--blue-soft); border:1px solid var(--line); border-radius:14px; padding:15px; margin:14px 0; }
+  .summary-line { display:flex; justify-content:space-between; gap:12px; padding:6px 0; color:var(--muted); font-size:.9rem; }
+  .summary-line strong { color:var(--ink); text-align:right; }
+  .rental-card { border:1px solid var(--line); border-radius:14px; padding:15px; margin:10px 0; background:var(--paper); }
+  .rental-card h3 { margin:0 0 8px; font-size:1rem; }
+  .rental-status { display:inline-block; border-radius:999px; background:var(--yellow-soft); color:var(--ink); padding:5px 9px; font-size:.74rem; font-weight:800; }
+  .countdown { font-weight:850; color:var(--blue); margin-top:8px; }
+  .payment-method-note { font-size:.78rem; color:var(--muted); line-height:1.5; margin:6px 0 12px; }
+  .fee-note { background:var(--yellow-soft); border:1px solid #f0d98c; border-radius:12px; padding:12px; color:var(--ink); font-size:.82rem; line-height:1.5; margin:12px 0; }
+  .return-confirmed { background:#e2f4e9; color:#236344; border:0; border-radius:10px; padding:10px 12px; font-weight:800; margin-top:10px; width:100%; }
+  .owner-request { border:1px solid var(--line); border-radius:13px; padding:14px; margin:10px 0; background:var(--blue-soft); }
+  .owner-request h4 { margin:0 0 8px; }
+  .bank-details { border-top:1px solid var(--line); margin-top:10px; padding-top:10px; }
+  .dashboard-tabs { display:flex; gap:8px; margin:8px 0 18px; flex-wrap:wrap; }
+  .dashboard-tab { border:1px solid var(--line); border-radius:999px; padding:10px 15px; background:var(--paper); color:var(--ink); font-weight:800; cursor:pointer; }
+  .dashboard-tab.active { background:var(--blue); color:white; border-color:var(--blue); }
+  .dashboard-panel[hidden] { display:none !important; }
+  .action-button { border:0; border-radius:10px; padding:10px 12px; font-weight:800; cursor:pointer; margin:8px 6px 0 0; }
+  .action-primary { background:var(--blue); color:white; }
+  .action-secondary { background:var(--yellow-soft); color:var(--ink); }
+  .action-button:disabled { opacity:.55; cursor:not-allowed; }
+  .auth-switch { text-align:center; color:var(--muted); font-size:.88rem; margin-top:14px; }
+  .auth-switch button { border:0; background:none; color:var(--blue); font-weight:800; }
+  .qr-demo { display:none; text-align:center; padding:14px; border:1px dashed var(--line); border-radius:12px; margin-bottom:12px; }
+  .qr-demo.visible { display:block; }
+  .qr-code-fake { display:inline-grid; grid-template-columns:repeat(7,9px); gap:2px; padding:9px; background:white; border:1px solid #d9dfe8; }
+  .qr-code-fake span { width:9px; height:9px; background:#fff; }
+  .qr-code-fake span.on { background:#152238; }
+  @media(max-width:680px) { .nav-actions #myRentalsBtn { display:none; } .account-chip { display:none; } }
+  @media (max-width:680px) { .nav-actions .settings-toggle { display:inline-flex !important; } .nav-actions { gap:4px; } .nav-actions .settings-toggle { padding:9px 8px; font-size:.78rem; } .listing-form-grid { grid-template-columns:1fr; } .field.full-width { grid-column:auto; } .modal { padding:20px; } }
+  .modal-head { display: flex; align-items: start; justify-content: space-between; gap: 15px; margin-bottom: 18px; }
+  .modal-head h2 { font-size: 1.5rem; }
+  .modal-head p { color: var(--muted); font-size: .88rem; margin: 7px 0 0; line-height: 1.5; }
+  .close-modal { border: 0; background: #f2f5fa; border-radius: 10px; width: 34px; height: 34px; font-size: 1.2rem; color: var(--muted); }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-weight: 750; font-size: .83rem; margin-bottom: 7px; }
+  .field input, .field select, .field textarea { width: 100%; border: 1px solid #dfe5ef; border-radius: 11px; padding: 12px; outline: none; color: var(--ink); background: white; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: #8aa5d5; box-shadow: 0 0 0 3px #4169a817; }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .modal .btn { width: 100%; margin-top: 4px; }
+  .demo-note { font-size: .76rem; color: var(--muted); line-height: 1.5; margin: 12px 0 0; }
+  @media (max-width: 960px) {
+    .hero-grid { gap: 25px; }.categories { grid-template-columns: repeat(3, 1fr); }.listing-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero-art { min-height: 330px; }.nav-links { gap: 16px; }
+  }
+  @media (max-width: 680px) {
+    .container { width: min(100% - 28px, 520px); }
+    .nav { height: 66px; }.nav-links { display: none; }.nav-actions .btn-quiet { display: none; }.nav-actions .btn { padding: 10px 12px; font-size: .82rem; }
+    .hero { padding: 39px 0 25px; }.hero-grid { grid-template-columns: 1fr; gap: 27px; }
+    h1 { letter-spacing: -1.9px; font-size: clamp(2.5rem, 11vw, 3.5rem); }.hero-copy { font-size: 1rem; }
+    .hero-art { min-height: 310px; }.art-photo { height: 150px; }.tag-top { left: 10px; top: 24px; }.tag-bottom { right: 10px; bottom: 22px; }
+    .search-wrap { margin-top: 22px; }.search-wrap .btn { padding: 11px 13px; }
+    .section { padding: 28px 0 38px; }.section-head { align-items: start; }.section-sub { line-height: 1.5; }
+    .categories { grid-template-columns: repeat(3, 1fr); gap: 9px; }.category { padding: 14px 5px; }.category-emoji { width: 42px; height: 42px; }
+    .listing-grid { gap: 11px; }.listing-image { height: 140px; font-size: 3.2rem; }.listing-body { padding: 12px; }.listing h3 { font-size: .91rem; }.listing-bottom { align-items: start; flex-direction: column; }.details-btn { width: 100%; }
+    .steps { grid-template-columns: 1fr; gap: 12px; }.step { padding: 19px; }.how { padding: 40px 0; }
+    .cta { padding: 35px 0; }.cta-box { align-items: start; flex-direction: column; padding: 27px 23px; }.cta-box .btn { width: 100%; }
+    .footer-inner { align-items: start; flex-direction: column; }.footer-links { flex-wrap: wrap; }
+  }
+  @media (max-width: 360px) { .categories { grid-template-columns: repeat(2, 1fr); }.listing-grid { grid-template-columns: 1fr; }.listing-image { height: 190px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="container nav">
+    <a class="brand" href="#" aria-label="RentUs home"><span class="brand-mark">R.</span><span>RentUs</span></a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="#explore">Explore items</a><a href="#how-it-works">How it works</a><a href="#community">Campus community</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn btn-quiet" id="savedNav">♡ <span data-i18n="saved">Saved</span> <span id="savedCount">0</span></button>
+      <button class="btn btn-quiet settings-toggle" id="settingsToggle" aria-expanded="false" aria-controls="settingsPanel">⚙ <span data-i18n="settings">Settings</span></button>
+      <button class="btn btn-quiet" id="myRentalsBtn">My rentals</button>
+      <button class="btn btn-quiet" id="accountBtn">Log in</button>
+      <button class="btn btn-primary" data-open-listing>＋ <span data-i18n="listItem">List an item</span></button>
+    </div>
+  </div>
+
+</header>
+<div class="settings-scrim" id="settingsScrim"></div>
+<div class="settings-panel" id="settingsPanel" role="dialog" aria-modal="true" aria-label="Display and language settings">
+  <div class="settings-title"><strong data-i18n="preferences">Preferences</strong><button class="settings-close" id="settingsClose" aria-label="Close settings">×</button></div>
+  <div class="setting-row"><label for="themeSelect" data-i18n="display">Display</label><select id="themeSelect"><option value="light" data-i18n="light">Light</option><option value="dark" data-i18n="dark">Dark</option></select></div>
+  <div class="setting-row"><label for="languageSelect" data-i18n="language">Language</label><select id="languageSelect"><option value="en">English</option><option value="id">Bahasa Indonesia</option></select></div>
+</div>
+
+<main>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="eyebrow"><span class="eyebrow-dot"></span> MADE FOR CAMPUS LIFE</div>
+        <h1>Need it for a bit?<br> <span class="highlight">Borrow it.</span></h1>
+        <p class="hero-copy">Your campus, your community, your marketplace. Find the things you need for class, your next project, or just everyday student life — without buying everything new.</p>
+        <div class="hero-buttons"><a class="btn btn-primary" href="#explore">Explore rentals <span aria-hidden="true">↗</span></a><button class="btn btn-yellow" data-open-listing>Earn from what you own</button></div>
+        <div class="trust-row"><div class="avatar-stack"><span class="avatar">🧑🏻‍🎓</span><span class="avatar">👩🏽‍🎓</span><span class="avatar">🧑🏾‍💻</span><span class="avatar">👩🏼‍🎨</span></div><span>A little sharing goes a long way.</span></div>
+        <form class="search-wrap" id="searchForm" role="search"><span class="search-icon" aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Try “camera”, “calculator”, “projector”..." aria-label="Search rental items"><button class="btn btn-primary" type="submit">Search</button></form>
+      </div>
+      <div class="hero-art" aria-label="Featured rental item illustration">
+        <div class="float-tag tag-top">🎓 Campus-friendly<small>Made for student life</small></div>
+        <div class="art-card">
+          <div class="art-photo"><span>📷</span></div>
+          <div class="art-card-row"><div><strong>Digital camera</strong><small>Great for events & projects</small></div><div class="price">Rp75k<small style="text-align:right">/ day</small></div></div>
+        </div>
+        <div class="float-tag tag-bottom">✨ Use it. Return it.<small>Keep good things moving.</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="explore">
+    <div class="container">
+      <div class="section-head"><div><div class="section-kicker">Find your thing</div><h2>What are you looking for?</h2><p class="section-sub">From last-minute assignments to weekend plans.</p></div><button class="text-link" id="clearFilters">Clear filters ↗</button></div>
+      <div class="categories" id="categories">
+        <button class="category" data-category="Study"><span class="category-emoji">📚</span><strong>Study tools</strong><small>For the grind</small></button>
+        <button class="category" data-category="Tech"><span class="category-emoji">💻</span><strong>Tech & gadgets</strong><small>Plug into ideas</small></button>
+        <button class="category" data-category="Creative"><span class="category-emoji">🎨</span><strong>Creative gear</strong><small>Make something</small></button>
+        <button class="category" data-category="Lifestyle"><span class="category-emoji">🧺</span><strong>Lifestyle</strong><small>Daily essentials</small></button>
+        <button class="category" data-category="Events"><span class="category-emoji">🎤</span><strong>Events & fun</strong><small>Bring the vibe</small></button>
+        <button class="category" data-category="Other"><span class="category-emoji">✦</span><strong>Other stuff</strong><small>Surprise us</small></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section listing-section">
+    <div class="container">
+      <div class="section-head"><div><div class="section-kicker">The campus edit</div><h2 id="listingTitle">Popular near you</h2><p class="section-sub">Useful finds shared by your fellow students.</p></div><span class="text-link" id="resultCount" aria-live="polite">8 items</span></div>
+      <div class="filter-row" id="filters">
+        <button class="filter active" data-sort="popular">✦ Popular</button>
+        <button class="filter" data-sort="price-low">Price: low to high</button>
+        <button class="filter" data-sort="newest">Recently added</button>
+      </div>
+      <div class="listing-grid" id="listingGrid"></div>
+    </div>
+  </section>
+
+  <section class="how" id="how-it-works">
+    <div class="container">
+      <div class="section-head"><div><div class="section-kicker">Simple by design</div><h2>Good things go around.</h2><p class="section-sub">A simple way to rent from people in your campus community.</p></div></div>
+      <div class="steps">
+        <article class="step"><div class="step-num">01</div><h3>Find what you need</h3><p>Search by item or category. Check the price and details before reaching out to the owner.</p></article>
+        <article class="step"><div class="step-num">02</div><h3>Connect & agree</h3><p>Discuss dates, pickup, return, deposit, and rental terms directly with the other person.</p></article>
+        <article class="step"><div class="step-num">03</div><h3>Use it, return it</h3><p>Take care of the item, return it as agreed, and help useful things find their next use.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" id="community">
+    <div class="container"><div class="cta-box"><div><h2>Your shelf could be someone’s solution.</h2><p>Have a calculator, camera, or gear collecting dust? Give it a second life — and earn a little on the side.</p></div><button class="btn btn-yellow" data-open-listing>＋ List your first item</button></div></div>
+  </section>
+</main>
+
+<footer><div class="container footer-inner"><a class="brand" href="#"><span class="brand-mark">R.</span><span>RentUs</span></a><span>Built for campus life · Share more, buy less.</span><div class="footer-links"><a href="#explore">Explore</a><a href="#how-it-works">How it works</a><a href="#community">Community</a></div></div></footer>
+
+<div class="notice" id="notice" role="status" aria-live="polite"></div>
+<div class="modal-backdrop" id="listingModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-head"><div><h2 id="modalTitle">Add your item</h2><p>Share something useful with your campus community.</p></div><button class="close-modal" id="closeModal" aria-label="Close dialog">×</button></div>
+    <form id="listingForm">
+      <div class="listing-form-grid">
+        <div class="field"><label for="itemName">Your item name *</label><input id="itemName" required maxlength="70" placeholder="e.g. Scientific calculator"></div>
+        <div class="field"><label for="itemCategory">Your item type *</label><select id="itemCategory" required><option value="">Choose a type</option><option value="Education">Education</option><option value="Daily needs">Daily needs</option><option value="Tech">Technology & gadgets</option><option value="Creative">Creative equipment</option><option value="Events">Events & entertainment</option><option value="Lifestyle">Lifestyle</option><option value="Other">Other</option></select></div>
+        <div class="field"><label for="itemPrice">Your price for the item (Rp per day) *</label><input id="itemPrice" type="number" min="1000" step="1000" required placeholder="e.g. 15000"></div>
+        <div class="field"><label for="itemDays">Days for rent availability *</label><select id="itemDays" required><option value="1">1 day</option><option value="2">2 days</option><option value="3">3 days</option></select></div>
+        <div class="field full-width"><label for="itemLocation">Campus / pickup area *</label><input id="itemLocation" required maxlength="100" placeholder="e.g. Library lobby"></div>
+        <div class="field full-width"><strong>Account for rental payouts</strong><p class="demo-note">These details are saved only in this browser demo. Do not enter sensitive real banking details until RentUs has a secure backend.</p></div>
+        <div class="field"><label for="payoutBank">Bank / e-wallet *</label><select id="payoutBank" required><option value="">Choose bank</option><option>BCA</option><option>Mandiri</option><option>BNI</option><option>BRI</option><option>BSI</option><option>BTN</option><option>Bank Jago</option><option>DANA</option><option>GoPay</option><option>OVO</option><option>Other</option></select></div>
+        <div class="field"><label for="payoutHolder">Account holder name *</label><input id="payoutHolder" required maxlength="100" placeholder="Name registered to account"></div>
+        <div class="field full-width"><label for="payoutNumber">Account number / payout ID *</label><input id="payoutNumber" required maxlength="60" inputmode="text" placeholder="Bank account number or e-wallet ID"></div>
+        <div class="field full-width"><label for="itemImage">Upload images of your item</label><input id="itemImage" type="file" accept="image/*"><img id="itemImagePreview" class="image-preview" alt="Preview of your item image"><p class="demo-note">Choose an image from your device. It will appear on your listing preview.</p></div>
+        <div class="field full-width"><label for="itemEmoji">Item icon (used if no image is uploaded)</label><select id="itemEmoji"><option>📦</option><option>📚</option><option>🧮</option><option>💻</option><option>📷</option><option>🎧</option><option>🎤</option><option>🎨</option><option>🧺</option><option>🚲</option><option>🔌</option></select></div>
+      </div>
+      <button class="btn btn-primary" type="submit">Add your item</button>
+      <p class="demo-note">Prototype only: listings are added to this browser session. A real marketplace needs a database and user accounts.</p>
+    </form>
+  </div>
+</div>
+
+
+<div class="modal-backdrop auth-layer" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="modal wide-modal">
+    <div class="modal-head"><div><h2 id="authTitle">Welcome to RentUs</h2><p id="authDescription">Log in or create a demo account to book rentals.</p></div><button class="close-modal" id="closeAuth" aria-label="Close dialog">×</button></div>
+    <form id="authForm">
+      <div class="field" id="authNameWrap"><label for="authName">Your name *</label><input id="authName" maxlength="60" autocomplete="name" placeholder="e.g. Tata"></div>
+      <div class="field"><label for="authEmail">Email address *</label><input id="authEmail" type="email" required maxlength="120" autocomplete="email" placeholder="you@example.com"></div>
+      <div class="field"><label for="authPassword">Password *</label><input id="authPassword" type="password" required minlength="4" maxlength="80" autocomplete="current-password" placeholder="At least 4 characters"></div>
+      <button class="btn btn-primary" id="authSubmit" type="submit">Create demo account</button>
+      <p class="demo-note">Demo account only: do not use a real password. Account details are stored only in this browser; this is not secure production authentication.</p>
+      <div class="auth-switch"><span id="authSwitchText">Already have an account?</span> <button type="button" id="authSwitchBtn">Log in instead</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-backdrop payment-layer" id="paymentModal" role="dialog" aria-modal="true" aria-labelledby="paymentTitle">
+  <div class="modal wide-modal">
+    <div class="modal-head"><div><h2 id="paymentTitle">Book this rental</h2><p>Review the rental period and choose a payment preference.</p></div><button class="close-modal" id="closePayment" aria-label="Close dialog">×</button></div>
+    <div id="paymentItemSummary" class="summary-box"></div>
+    <form id="paymentForm">
+      <div class="listing-form-grid">
+        <div class="field"><label for="rentDays">Rental duration *</label><select id="rentDays" required><option value="1">1 day</option><option value="2">2 days</option><option value="3">3 days</option></select></div>
+        <div class="field"><label for="paymentMethod">Payment preference *</label><select id="paymentMethod" required>
+          <option value="QRIS">QRIS</option><option value="BCA">BCA Virtual Account / transfer</option><option value="Mandiri">Bank Mandiri</option><option value="BNI">BNI</option><option value="BRI">BRI</option><option value="BSI">Bank Syariah Indonesia (BSI)</option><option value="GoPay">GoPay</option><option value="DANA">DANA</option><option value="OVO">OVO</option>
+        </select></div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-line"><span>Rental subtotal</span><strong id="paymentSubtotal">Rp0</strong></div>
+        <div class="summary-line"><span>Service fee (5%)</span><strong id="paymentServiceFee">Rp0</strong></div>
+        <div class="summary-line"><span>Payment method</span><strong id="paymentMethodLabel">QRIS</strong></div>
+        <div class="summary-line"><span>Total (demo)</span><strong id="paymentTotal">Rp0</strong></div>
+        <div class="fee-note">The 5% service fee is paid by the renter. The platform also deducts a separate 15% commission from the owner's rental subtotal. Owner payout estimate: <strong id="ownerPayoutPreview">Rp0</strong>.</div>
+      </div>
+      <div id="qrisDemo" class="qr-demo"><strong>QRIS demo preview</strong><p class="payment-method-note">This is a visual placeholder, not a valid QR code. No money will be charged.</p><div class="qr-code-fake" aria-hidden="true" id="fakeQr"></div></div>
+      <p class="payment-method-note" id="paymentMethodNote">Choose a method to see the demo instructions.</p>
+      <button class="btn btn-primary" type="submit">Confirm demo booking</button>
+      <p class="demo-note">Prototype only: this does not process real payments. Real bank transfers/QRIS require a payment provider, backend verification, and secure booking records.</p>
+    </form>
+  </div>
+</div>
+
+<div class="modal-backdrop rentals-layer" id="rentalsModal" role="dialog" aria-modal="true" aria-labelledby="rentalsTitle">
+  <div class="modal wide-modal">
+    <div class="modal-head"><div><h2 id="rentalsTitle">My rentals & owner updates</h2><p>Track your return deadline and see rental requests for your listed items.</p></div><button class="close-modal" id="closeRentals" aria-label="Close dialog">×</button></div>
+    <div class="dashboard-tabs" role="tablist" aria-label="Choose dashboard">
+      <button type="button" class="dashboard-tab active" id="renterTab" role="tab" aria-selected="true">My rentals · Renter</button>
+      <button type="button" class="dashboard-tab" id="ownerTab" role="tab" aria-selected="false">My listings · Owner</button>
+    </div>
+    <section class="dashboard-panel" id="renterPanel" role="tabpanel"><h3>My rentals</h3><p class="section-sub">Track your rental period, request an extension, and confirm the return.</p><div id="rentalsList"></div></section>
+    <section class="dashboard-panel" id="ownerPanel" role="tabpanel" hidden><h3>Owner dashboard</h3><p class="section-sub">Manage incoming rentals, approve extension requests, and confirm returned items.</p><div id="ownerRequestsList"></div></section>
+    <p class="demo-note">This local demo does not send push/email notifications or move money. A production version needs secure server-side records and verified payments.</p>
+  </div>
+</div>
+
+<script>
+const starterItems = [
+  {id:1,name:"Scientific calculator",category:"Study",emoji:"🧮",price:10000,unit:"day",location:"Campus library",condition:"Student essential",tone:"yellow",owner:"Nadia"},
+  {id:2,name:"Mirrorless camera",category:"Creative",emoji:"📷",price:75000,unit:"day",location:"Student center",condition:"Great condition",tone:"blue",owner:"Rafi"},
+  {id:3,name:"Portable projector",category:"Tech",emoji:"📽️",price:50000,unit:"day",location:"Design building",condition:"For group work",tone:"lavender",owner:"Alya"},
+  {id:4,name:"Wireless headphones",category:"Tech",emoji:"🎧",price:15000,unit:"day",location:"Campus library",condition:"Noise-cancelling",tone:"pink",owner:"Dimas"},
+  {id:5,name:"Ring light + tripod",category:"Creative",emoji:"💡",price:20000,unit:"day",location:"Student center",condition:"Creator pick",tone:"peach",owner:"Keira"},
+  {id:6,name:"Folding bicycle",category:"Lifestyle",emoji:"🚲",price:30000,unit:"day",location:"North gate",condition:"Campus commute",tone:"green",owner:"Bima"},
+  {id:7,name:"Presentation clicker",category:"Study",emoji:"🖱️",price:8000,unit:"day",location:"Business faculty",condition:"Presentation ready",tone:"blue",owner:"Sarah"},
+  {id:8,name:"Portable speaker",category:"Events",emoji:"🔊",price:25000,unit:"day",location:"Student center",condition:"Small events",tone:"yellow",owner:"Fahri"}
+];
+let items = (() => { try { const savedItems = JSON.parse(localStorage.getItem("rentus-items") || "null"); return Array.isArray(savedItems) ? savedItems : [...starterItems]; } catch { return [...starterItems]; } })();
+let currentAccount = (() => { try { return JSON.parse(localStorage.getItem("rentus-current-account") || "null"); } catch { return null; } })();
+let authMode = "signup";
+let pendingBookingItemId = null;
+let selectedBookingItem = null;
+let extensionBookingId = null;
+let rentals = (() => { try { return JSON.parse(localStorage.getItem("rentus-rentals") || "[]"); } catch { return []; } })();
+let rentalTicker = null;
+let activeCategory = "";
+let activeSort = "popular";
+let searchTerm = "";
+let saved = new Set();
+const grid = document.getElementById("listingGrid");
+const notice = document.getElementById("notice");
+let noticeTimer;
+function rupiah(value) { return "Rp" + Number(value).toLocaleString("id-ID"); }
+function showNotice(message) {
+  notice.textContent = message;
+  notice.classList.add("show");
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => notice.classList.remove("show"), 2800);
+}
+
+const translations = {
+  en: {
+    saved:"Saved", settings:"Settings", listItem:"List an item", preferences:"Preferences", display:"Display",
+    light:"Light", dark:"Dark", language:"Language", explore:"Explore items", howNav:"How it works", communityNav:"Campus community",
+    eyebrow:"MADE FOR CAMPUS LIFE", heroTitle:'Need it for a bit?<br> <span class="highlight">Rent it.</span>',
+    heroCopy:"Your campus, your community, your marketplace. Find the things you need for class, your next project, or just everyday student life — without buying everything new.",
+    exploreRentals:"Explore rentals", earn:"Earn from what you own", trust:"A little sharing goes a long way.",
+    searchPlaceholder:'Try “camera”, “calculator”, “projector”...', search:"Search", campusTag:"Campus-friendly", campusTagSub:"Made for student life",
+    camera:"Digital camera", cameraSub:"Great for events & projects", perDay:"/ day", useReturn:"✨ Use it. Return it.", useReturnSub:"Keep good things moving.",
+    findThing:"Find your thing", lookingFor:"What are you looking for?", sectionSub:"From last-minute assignments to weekend plans.", clearFilters:"Clear filters ↗",
+    study:"Study tools", studySub:"For the grind", tech:"Tech & gadgets", techSub:"Plug into ideas", creative:"Creative gear", creativeSub:"Make something",
+    lifestyle:"Lifestyle", lifestyleSub:"Daily essentials", events:"Events & fun", eventsSub:"Bring the vibe", other:"Other stuff", otherSub:"Surprise us",
+    campusEdit:"The campus edit", popular:"Popular near you", listingsSub:"Useful finds shared by your fellow students.",
+    popularFilter:"✦ Popular", priceSort:"Price: low to high", newest:"Recently added", howKicker:"Simple by design",
+    goodThings:"Good things go around.", howSub:"A simple way to rent from people in your campus community.",
+    step1:"Find what you need", step1p:"Search by item or category. Check the price and details before reaching out to the owner.",
+    step2:"Connect & agree", step2p:"Discuss dates, pickup, return, deposit, and rental terms directly with the other person.",
+    step3:"Use it, return it", step3p:"Take care of the item, return it as agreed, and help useful things find their next use.",
+    ctaTitle:"Your shelf could be someone’s solution.", ctaCopy:"Have a calculator, camera, or gear collecting dust? Give it a second life — and earn a little on the side.",
+    listFirst:"＋ List your first item", footer:"Built for campus life · Share more, buy less.", explore:"Explore", community:"Community",
+    modalTitle:"List an item", modalCopy:"Share something useful with your campus community.", itemName:"Item name *", category:"Category *",
+    chooseCategory:"Choose a category", rentalPrice:"Rental price (Rp per day) *", pickup:"Campus / pickup area *", itemIcon:"Choose an item icon",
+    preview:"Preview listing", demoNote:"Prototype only: this preview stays in this browser session. A real marketplace needs a database, accounts, and a safe contact / booking flow.",
+    noItems:"No items found just yet.", tryAnother:"Try another search or clear your filters.", viewDetails:"View details ↗",
+    savedRemoved:"Removed from saved items.", savedLater:"Saved for later ♡", noSaved:"Tap the ♡ on any item to save it for later.",
+    itemAdded:"Your item preview has been added! This is a local demo.", results:"items", result:"item", listAria:"RentUs home"
+  },
+  id: {
+    saved:"Tersimpan", settings:"Pengaturan", listItem:"Tambahkan barang", preferences:"Preferensi", display:"Tampilan",
+    light:"Terang", dark:"Gelap", language:"Bahasa", explore:"Jelajahi barang", howNav:"Cara kerja", communityNav:"Komunitas kampus",
+    eyebrow:"DIBUAT UNTUK KEHIDUPAN KAMPUS", heroTitle:'Butuh sebentar?<br> <span class="highlight">Sewa saja.</span>',
+    heroCopy:"Kampusmu, komunitasmu, pasarmu. Temukan barang untuk kelas, proyek, atau kebutuhan sehari-hari mahasiswa — tanpa harus membeli semuanya.",
+    exploreRentals:"Jelajahi sewaan", earn:"Hasilkan dari barangmu", trust:"Berbagi sedikit bisa berarti banyak.",
+    searchPlaceholder:'Coba “kamera”, “kalkulator”, “proyektor”...', search:"Cari", campusTag:"Ramah mahasiswa", campusTagSub:"Dibuat untuk kehidupan mahasiswa",
+    camera:"Kamera digital", cameraSub:"Cocok untuk acara & proyek", perDay:"/ hari", useReturn:"✨ Pakai. Kembalikan.", useReturnSub:"Buat barang bermanfaat terus digunakan.",
+    findThing:"Temukan barangmu", lookingFor:"Apa yang kamu cari?", sectionSub:"Dari tugas mendadak hingga rencana akhir pekan.", clearFilters:"Hapus filter ↗",
+    study:"Alat belajar", studySub:"Untuk belajar", tech:"Teknologi & gadget", techSub:"Wujudkan ide", creative:"Peralatan kreatif", creativeSub:"Berkreasi",
+    lifestyle:"Gaya hidup", lifestyleSub:"Kebutuhan harian", events:"Acara & hiburan", eventsSub:"Hidupkan suasana", other:"Lainnya", otherSub:"Kejutan untukmu",
+    campusEdit:"Pilihan kampus", popular:"Populer di sekitarmu", listingsSub:"Temuan bermanfaat dari sesama mahasiswa.",
+    popularFilter:"✦ Populer", priceSort:"Harga: terendah", newest:"Baru ditambahkan", howKicker:"Dirancang sederhana",
+    goodThings:"Barang bermanfaat, berbagi manfaat.", howSub:"Cara mudah menyewa barang dari komunitas kampusmu.",
+    step1:"Temukan yang dibutuhkan", step1p:"Cari berdasarkan barang atau kategori. Periksa harga dan detail sebelum menghubungi pemilik.",
+    step2:"Hubungi & sepakati", step2p:"Diskusikan tanggal, pengambilan, pengembalian, deposit, dan ketentuan sewa secara langsung.",
+    step3:"Gunakan, lalu kembalikan", step3p:"Jaga barang dengan baik, kembalikan sesuai kesepakatan, dan bantu barang bermanfaat digunakan kembali.",
+    ctaTitle:"Barang di rakmu bisa jadi solusi bagi orang lain.", ctaCopy:"Punya kalkulator, kamera, atau perlengkapan yang jarang dipakai? Beri kesempatan kedua dan dapatkan penghasilan tambahan.",
+    listFirst:"＋ Tambahkan barang pertamamu", footer:"Dibuat untuk kehidupan kampus · Lebih banyak berbagi, lebih sedikit membeli.", explore:"Jelajahi", community:"Komunitas",
+    modalTitle:"Tambahkan barang", modalCopy:"Bagikan barang yang bermanfaat dengan komunitas kampusmu.", itemName:"Nama barang *", category:"Kategori *",
+    chooseCategory:"Pilih kategori", rentalPrice:"Harga sewa (Rp per hari) *", pickup:"Kampus / lokasi pengambilan *", itemIcon:"Pilih ikon barang",
+    preview:"Pratinjau daftar", demoNote:"Hanya prototipe: pratinjau tersimpan selama sesi browser ini. Marketplace sungguhan memerlukan basis data, akun, dan alur kontak/pemesanan yang aman.",
+    noItems:"Barang belum ditemukan.", tryAnother:"Coba pencarian lain atau hapus filter.", viewDetails:"Lihat detail ↗",
+    savedRemoved:"Dihapus dari daftar tersimpan.", savedLater:"Disimpan untuk nanti ♡", noSaved:"Tekan ♡ pada barang untuk menyimpannya.",
+    itemAdded:"Pratinjau barang berhasil ditambahkan! Ini hanya demo lokal.", results:"barang", result:"barang", listAria:"Beranda RentUs"
+  }
+};
+let currentLanguage = localStorage.getItem("rentus-language") || "en";
+let currentTheme = localStorage.getItem("rentus-theme") || "light";
+function tr(key) { return translations[currentLanguage][key] || translations.en[key] || key; }
+function applyTheme() {
+  document.documentElement.dataset.theme = currentTheme === "dark" ? "dark" : "light";
+  document.getElementById("themeSelect").value = currentTheme;
+  localStorage.setItem("rentus-theme", currentTheme);
+}
+function applyLanguage() {
+  document.documentElement.lang = currentLanguage === "id" ? "id" : "en";
+  document.getElementById("languageSelect").value = currentLanguage;
+  document.querySelectorAll("[data-i18n]").forEach(el => { const key = el.dataset.i18n; if (tr(key)) el.textContent = tr(key); });
+  const textMap = {
+    ".nav-links a[href='#explore']":"explore", ".nav-links a[href='#how-it-works']":"howNav",
+    ".nav-links a[href='#community']":"communityNav", ".eyebrow":"eyebrow", ".hero-copy":"heroCopy",
+    ".hero-buttons a":"exploreRentals", ".hero-buttons button":"earn", ".trust-row > span:last-child":"trust",
+    ".search-wrap button":"search", ".tag-top":"campusTag", ".tag-bottom":"useReturn",
+    ".section-kicker":"findThing", "#explore h2":"lookingFor", "#explore .section-sub":"sectionSub",
+    "#clearFilters":"clearFilters", ".listing-section .section-kicker":"campusEdit", "#listingTitle":"popular",
+    ".listing-section .section-sub":"listingsSub", "[data-sort='popular']":"popularFilter",
+    "[data-sort='price-low']":"priceSort", "[data-sort='newest']":"newest", ".how .section-kicker":"howKicker",
+    ".how h2":"goodThings", ".how .section-sub":"howSub", ".cta-box h2":"ctaTitle", ".cta-box p":"ctaCopy",
+    ".cta-box button":"listFirst", "footer .footer-inner > span":"footer", ".footer-links a[href='#explore']":"explore",
+    ".footer-links a[href='#how-it-works']":"howNav", ".footer-links a[href='#community']":"community",
+    "#modalTitle":"modalTitle", ".modal-head p":"modalCopy", "label[for='itemName']":"itemName",
+    "label[for='itemCategory']":"category", "label[for='itemPrice']":"rentalPrice", "label[for='itemLocation']":"pickup",
+    "label[for='itemEmoji']":"itemIcon", "#listingForm button[type='submit']":"preview", ".demo-note":"demoNote"
+  };
+  Object.entries(textMap).forEach(([selector,key]) => { const el=document.querySelector(selector); if(el) { if(key==="eyebrow"||key==="tag-top"||key==="tag-bottom") { const first=el.childNodes; if(el.classList.contains("eyebrow")) el.lastChild.textContent=" "+tr(key); else el.childNodes[0].textContent=tr(key); } else el.textContent=tr(key); }});
+  document.querySelector("h1").innerHTML = tr("heroTitle");
+  document.querySelector(".search-wrap input").placeholder = tr("searchPlaceholder");
+  document.querySelector(".search-wrap input").setAttribute("aria-label", tr("search"));
+  document.querySelector(".brand").setAttribute("aria-label", tr("listAria"));
+  const categoryKeys = [["study","studySub"],["tech","techSub"],["creative","creativeSub"],["lifestyle","lifestyleSub"],["events","eventsSub"],["other","otherSub"]];
+  document.querySelectorAll(".category").forEach((el,i)=>{el.querySelector("strong").textContent=tr(categoryKeys[i][0]);el.querySelector("small").textContent=tr(categoryKeys[i][1]);});
+  renderItems();
+}
+const settingsPanel = document.getElementById("settingsPanel");
+const settingsScrim = document.getElementById("settingsScrim");
+function openSettings() { settingsPanel.classList.add("open"); settingsScrim.classList.add("open"); document.getElementById("settingsToggle").setAttribute("aria-expanded","true"); }
+function closeSettings() { settingsPanel.classList.remove("open"); settingsScrim.classList.remove("open"); document.getElementById("settingsToggle").setAttribute("aria-expanded","false"); }
+document.getElementById("settingsToggle").addEventListener("click", openSettings);
+document.getElementById("settingsClose").addEventListener("click", closeSettings);
+settingsScrim.addEventListener("click", closeSettings);
+document.getElementById("themeSelect").addEventListener("change", e=>{currentTheme=e.target.value;applyTheme();});
+document.getElementById("languageSelect").addEventListener("change", e=>{currentLanguage=e.target.value;localStorage.setItem("rentus-language",currentLanguage);applyLanguage();});
+
+function renderItems() {
+  let filtered = items.filter(item => {
+    const matchesCategory = !activeCategory || item.category === activeCategory;
+    const haystack = `${item.name} ${item.category} ${item.location} ${item.owner}`.toLowerCase();
+    return matchesCategory && haystack.includes(searchTerm.toLowerCase());
+  });
+  if (activeSort === "price-low") filtered.sort((a,b) => a.price - b.price);
+  if (activeSort === "newest") filtered.sort((a,b) => b.id - a.id);
+  if (activeSort === "popular") filtered.sort((a,b) => (starterItems.findIndex(x=>x.id===a.id) < 0 ? 1 : 0) - (starterItems.findIndex(x=>x.id===b.id) < 0 ? 1 : 0));
+  document.getElementById("resultCount").textContent = `${filtered.length} ${filtered.length===1?tr("result"):tr("results")}`;
+  document.getElementById("listingTitle").textContent = activeCategory ? `${activeCategory} ${currentLanguage==="id"?"":"finds"}` : (searchTerm ? (currentLanguage==="id"?"Hasil pencarian":"Search results") : tr("popular"));
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state"><div style="font-size:2rem;margin-bottom:10px">🔎</div><strong>${tr("noItems")}</strong><p>${tr("tryAnother")}</p><button class="btn btn-primary" id="emptyClear">Clear filters</button></div>`;
+    document.getElementById("emptyClear").addEventListener("click", clearFilters);
+    return;
+  }
+  grid.innerHTML = filtered.map(item => `
+    <article class="listing">
+      <div class="listing-image ${item.tone}">${item.image ? `<img class="listing-photo" src="${item.image}" alt="${escapeHTML(item.name)}">` : `<span>${item.emoji}</span>`}<span class="condition">${item.condition}</span><button class="heart ${saved.has(item.id)?"saved":""}" data-save="${item.id}" aria-label="${saved.has(item.id)?"Remove from":"Save"} favourites">${saved.has(item.id)?"♥":"♡"}</button></div>
+      <div class="listing-body"><div class="listing-type">${item.category}</div><h3>${escapeHTML(item.name)}</h3>
+      <div class="listing-meta"><span>⌖</span><span>${escapeHTML(item.location)}</span></div>
+      <div class="listing-bottom"><div class="listing-price">${rupiah(item.price)} <small>/ day</small></div><button class="details-btn" data-details="${item.id}">${tr("viewDetails")}</button></div></div>
+    </article>`).join("");
+  grid.querySelectorAll("[data-save]").forEach(button => button.addEventListener("click", () => {
+    const id = Number(button.dataset.save);
+    if (saved.has(id)) { saved.delete(id); showNotice(tr("savedRemoved")); }
+    else { saved.add(id); showNotice(tr("savedLater")); }
+    document.getElementById("savedCount").textContent = saved.size;
+    renderItems();
+  }));
+  grid.querySelectorAll("[data-details]").forEach(button => button.addEventListener("click", () => {
+    const item = items.find(x => x.id === Number(button.dataset.details));
+    if (!item) return;
+    if (!currentAccount) { pendingBookingItemId = item.id; openAuth("login"); return; }
+    openPayment(item);
+  }));
+}
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+}
+function clearFilters() {
+  activeCategory = ""; searchTerm = ""; activeSort = "popular";
+  document.getElementById("searchInput").value = "";
+  document.querySelectorAll(".category").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".filter").forEach(el => el.classList.toggle("active", el.dataset.sort === "popular"));
+  renderItems();
+}
+document.querySelectorAll(".category").forEach(button => button.addEventListener("click", () => {
+  activeCategory = activeCategory === button.dataset.category ? "" : button.dataset.category;
+  document.querySelectorAll(".category").forEach(el => el.classList.toggle("active", el.dataset.category === activeCategory));
+  renderItems();
+}));
+document.querySelectorAll(".filter").forEach(button => button.addEventListener("click", () => {
+  activeSort = button.dataset.sort;
+  document.querySelectorAll(".filter").forEach(el => el.classList.toggle("active", el === button));
+  renderItems();
+}));
+document.getElementById("searchForm").addEventListener("submit", event => {
+  event.preventDefault();
+  searchTerm = document.getElementById("searchInput").value.trim();
+  renderItems();
+  document.querySelector(".listing-section").scrollIntoView({behavior:"smooth", block:"start"});
+});
+document.getElementById("searchInput").addEventListener("input", event => {
+  searchTerm = event.target.value.trim();
+  renderItems();
+});
+document.getElementById("clearFilters").addEventListener("click", clearFilters);
+document.getElementById("savedNav").addEventListener("click", () => {
+  if (!saved.size) { showNotice(tr("noSaved")); return; }
+  const savedNames = items.filter(item => saved.has(item.id)).map(item=>item.name);
+  showNotice("Saved: " + savedNames.join(", "));
+});
+const modal = document.getElementById("listingModal");
+let selectedItemImage = "";
+document.getElementById("itemImage").addEventListener("change", event => {
+  const file = event.target.files && event.target.files[0];
+  const preview = document.getElementById("itemImagePreview");
+  selectedItemImage = "";
+  if (!file) { preview.removeAttribute("src"); preview.classList.remove("visible"); return; }
+  if (!file.type.startsWith("image/")) { showNotice("Please choose an image file."); event.target.value=""; return; }
+  const reader = new FileReader();
+  reader.onload = () => { selectedItemImage = String(reader.result || ""); preview.src = selectedItemImage; preview.classList.add("visible"); };
+  reader.readAsDataURL(file);
+});
+function openModal() { if (!currentAccount) { openAuth("login"); showNotice("Log in first to list an item and add payout details."); return; } selectedItemImage = ""; document.getElementById("itemImagePreview").classList.remove("visible"); document.getElementById("itemImage").value=""; modal.classList.add("open"); document.getElementById("itemName").focus(); }
+
+function closeModal() { modal.classList.remove("open"); }
+document.querySelectorAll("[data-open-listing]").forEach(button => button.addEventListener("click", openModal));
+document.getElementById("closeModal").addEventListener("click", closeModal);
+modal.addEventListener("click", event => { if (event.target === modal) closeModal(); });
+document.addEventListener("keydown", event => { if (event.key === "Escape") { closeModal(); closeSettings(); } });
+document.getElementById("listingForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const name = document.getElementById("itemName").value.trim();
+  const category = document.getElementById("itemCategory").value;
+  const price = Number(document.getElementById("itemPrice").value);
+  const location = document.getElementById("itemLocation").value.trim();
+  const emoji = document.getElementById("itemEmoji").value;
+  const days = Number(document.getElementById("itemDays").value);
+  const payoutBank = document.getElementById("payoutBank").value;
+  const payoutHolder = document.getElementById("payoutHolder").value.trim();
+  const payoutNumber = document.getElementById("payoutNumber").value.trim();
+  if (!currentAccount) { showNotice("Please log in before listing an item."); closeModal(); openAuth("login"); return; }
+  const image = selectedItemImage;
+  const tones = ["blue","yellow","green","pink","lavender","peach"];
+  items.unshift({id:Date.now(),name,category,price,unit:"day",days,image,location,emoji,condition:`Available ${days} day${days===1?"":"s"}`,tone:tones[Math.floor(Math.random()*tones.length)],owner:currentAccount.name || "You",ownerEmail:currentAccount.email,payoutBank,payoutHolder,payoutNumber});
+  try { localStorage.setItem("rentus-items", JSON.stringify(items)); } catch { showNotice("This image may be too large to save in browser storage. Try a smaller image."); }
+  activeCategory = ""; searchTerm = ""; activeSort = "newest";
+  document.getElementById("searchInput").value = "";
+  document.querySelectorAll(".category").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".filter").forEach(el => el.classList.toggle("active", el.dataset.sort === "newest"));
+  renderItems(); closeModal(); event.target.reset(); selectedItemImage=""; document.getElementById("itemImagePreview").removeAttribute("src"); document.getElementById("itemImagePreview").classList.remove("visible");
+  showNotice(tr("itemAdded"));
+  document.querySelector(".listing-section").scrollIntoView({behavior:"smooth"});
+});
+
+// --- Demo account, booking, payment preference, and return countdown ---
+const authModal = document.getElementById("authModal");
+const paymentModal = document.getElementById("paymentModal");
+const rentalsModal = document.getElementById("rentalsModal");
+const paymentForm = document.getElementById("paymentForm");
+function saveAccountState() {
+  try { localStorage.setItem("rentus-current-account", JSON.stringify(currentAccount)); } catch {}
+  updateAccountButton();
+}
+function updateAccountButton() {
+  const btn = document.getElementById("accountBtn");
+  btn.textContent = currentAccount ? `Hi, ${currentAccount.name || currentAccount.email.split("@")[0]}` : "Log in";
+  btn.title = currentAccount ? "Click to log out" : "Log in or sign up";
+}
+function openAuth(mode="login") {
+  authMode = mode;
+  document.getElementById("authTitle").textContent = mode === "signup" ? "Create your RentUs account" : "Log in to RentUs";
+  document.getElementById("authDescription").textContent = mode === "signup" ? "Create a local demo account to list and book items." : "Log in to continue with your rental booking.";
+  document.getElementById("authNameWrap").style.display = mode === "signup" ? "" : "none";
+  document.getElementById("authName").required = mode === "signup";
+  document.getElementById("authPassword").autocomplete = mode === "signup" ? "new-password" : "current-password";
+  document.getElementById("authSubmit").textContent = mode === "signup" ? "Create demo account" : "Log in";
+  document.getElementById("authSwitchText").textContent = mode === "signup" ? "Already have an account?" : "New to RentUs?";
+  document.getElementById("authSwitchBtn").textContent = mode === "signup" ? "Log in instead" : "Create an account";
+  authModal.classList.add("open");
+}
+function closeAuth() { authModal.classList.remove("open"); }
+document.getElementById("accountBtn").addEventListener("click", () => {
+  if (currentAccount) {
+    currentAccount = null; saveAccountState(); showNotice("You have logged out of this demo account.");
+  } else openAuth("login");
+});
+document.getElementById("closeAuth").addEventListener("click", closeAuth);
+authModal.addEventListener("click", e => { if (e.target === authModal) closeAuth(); });
+document.getElementById("authSwitchBtn").addEventListener("click", () => openAuth(authMode === "signup" ? "login" : "signup"));
+document.getElementById("authForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = document.getElementById("authName").value.trim();
+  const email = document.getElementById("authEmail").value.trim().toLowerCase();
+  const password = document.getElementById("authPassword").value;
+  let accounts = [];
+  try { accounts = JSON.parse(localStorage.getItem("rentus-demo-accounts") || "[]"); } catch {}
+  if (authMode === "signup") {
+    if (accounts.some(a => a.email === email)) { showNotice("An account with this email already exists. Please log in."); return; }
+    // Demo only: do not enter a real password. Production auth must be server-side.
+    accounts.push({name, email, password});
+    try { localStorage.setItem("rentus-demo-accounts", JSON.stringify(accounts)); }
+    catch { showNotice("Browser storage is unavailable. This demo account could not be saved."); return; }
+    currentAccount = {name, email};
+    showNotice("Demo account created! You are logged in.");
+  } else {
+    const account = accounts.find(a => a.email === email && a.password === password);
+    if (!account) { showNotice("We couldn't find that demo account. Check your details or sign up."); return; }
+    currentAccount = {name:account.name, email:account.email};
+    showNotice("You're logged in!");
+  }
+  saveAccountState(); closeAuth(); e.target.reset();
+  if (pendingBookingItemId !== null) {
+    const item = items.find(x => x.id === pendingBookingItemId);
+    pendingBookingItemId = null;
+    if (item) openPayment(item);
+  }
+});
+
+function openPayment(item) {
+  extensionBookingId = null;
+  selectedBookingItem = item;
+  document.getElementById("paymentTitle").textContent = "Book this rental";
+  document.querySelector("#paymentModal .modal-head p").textContent = "Review the rental period and choose a payment preference.";
+  document.querySelector("label[for=rentDays]").textContent = "Rental duration *";
+  document.getElementById("paymentItemSummary").innerHTML = `<strong>${escapeHTML(item.name)}</strong><div class="summary-line"><span>Owner</span><strong>${escapeHTML(item.owner || "Campus member")}</strong></div><div class="summary-line"><span>Pickup area</span><strong>${escapeHTML(item.location || "Confirm with owner")}</strong></div><div class="summary-line"><span>Rate</span><strong>${rupiah(item.price)} / day</strong></div><div class="summary-line"><span>Available rental period</span><strong>Up to ${Number(item.days || 3)} day(s)</strong></div>`;
+  const daysSelect = document.getElementById("rentDays");
+  const maxDays = Math.max(1, Math.min(3, Number(item.days || 3)));
+  daysSelect.innerHTML = Array.from({length:maxDays}, (_,i)=>`<option value="${i+1}">${i+1} day${i===0?"":"s"}</option>`).join("");
+  updatePaymentSummary();
+  paymentModal.classList.add("open");
+}
+function openExtensionPayment(rental) {
+  if (!currentAccount || rental.email !== currentAccount.email) return;
+  if (rental.extensionRequest && rental.extensionRequest.status === "Pending owner confirmation") { showNotice("Your extension request is already waiting for the owner."); return; }
+  extensionBookingId = rental.id;
+  selectedBookingItem = {id:rental.itemId, name:rental.itemName, owner:rental.owner, ownerEmail:rental.ownerEmail, location:"Existing rental", price:Number(rental.price), days:3};
+  document.getElementById("paymentTitle").textContent = "Extend your rental";
+  document.querySelector("#paymentModal .modal-head p").textContent = "Choose extra days and submit the extension payment request.";
+  document.querySelector("label[for=rentDays]").textContent = "Extra days to request *";
+  document.getElementById("paymentItemSummary").innerHTML = `<strong>${escapeHTML(rental.itemName)}</strong><div class="summary-line"><span>Current return deadline</span><strong>${new Date(rental.dueAt).toLocaleString()}</strong></div><div class="summary-line"><span>Price per day</span><strong>${rupiah(rental.price)}</strong></div><p class="payment-method-note">The new deadline applies only after the owner confirms the extension request.</p>`;
+  document.getElementById("rentDays").innerHTML = [1,2,3].map(d=>`<option value="${d}">${d} extra day${d===1?"":"s"}</option>`).join("");
+  updatePaymentSummary();
+  paymentModal.classList.add("open");
+}
+function closePayment() { paymentModal.classList.remove("open"); selectedBookingItem = null; extensionBookingId = null; }
+document.getElementById("closePayment").addEventListener("click", closePayment);
+paymentModal.addEventListener("click", e => { if (e.target === paymentModal) closePayment(); });
+function updatePaymentSummary() {
+  if (!selectedBookingItem) return;
+  const days = Number(document.getElementById("rentDays").value || 1);
+  const method = document.getElementById("paymentMethod").value;
+  const subtotal = Number(selectedBookingItem.price) * days;
+  const serviceFee = Math.round(subtotal * 0.05);
+  const total = subtotal + serviceFee;
+  const ownerCommission = Math.round(subtotal * 0.15);
+  const ownerPayout = subtotal - ownerCommission;
+  document.getElementById("paymentSubtotal").textContent = rupiah(subtotal);
+  document.getElementById("paymentServiceFee").textContent = rupiah(serviceFee);
+  document.getElementById("paymentTotal").textContent = rupiah(total);
+  document.getElementById("ownerPayoutPreview").textContent = rupiah(ownerPayout);
+  document.getElementById("paymentMethodLabel").textContent = method;
+  const qris = method === "QRIS";
+  document.getElementById("qrisDemo").classList.toggle("visible", qris);
+  const notes = {
+    QRIS:"QRIS selected. A real QRIS payment requires a verified payment gateway; this preview will not charge you.",
+    BCA:"BCA selected. In a live system, a verified virtual account or bank transfer instructions would be provided.",
+    Mandiri:"Bank Mandiri selected. In a live system, use a verified virtual account or official payment flow.",
+    BNI:"BNI selected. In a live system, use a verified virtual account or official payment flow.",
+    BRI:"BRI selected. In a live system, use a verified virtual account or official payment flow.",
+    BSI:"BSI selected. In a live system, use a verified virtual account or official payment flow.",
+    GoPay:"GoPay selected. A real payment requires an approved payment provider.",
+    DANA:"DANA selected. A real payment requires an approved payment provider.",
+    OVO:"OVO selected. A real payment requires an approved payment provider."
+  };
+  document.getElementById("paymentMethodNote").textContent = notes[method] || "";
+}
+document.getElementById("rentDays").addEventListener("change", updatePaymentSummary);
+document.getElementById("paymentMethod").addEventListener("change", updatePaymentSummary);
+document.getElementById("fakeQr").innerHTML = Array.from({length:49},(_,i)=>`<span class="${([0,1,2,7,9,14,15,16,21,28,29,30,34,36,38,40,42,43,44,46,48].includes(i) || (i*7+3)%5<2)?"on":""}"></span>`).join("");
+
+paymentForm.addEventListener("submit", e => {
+  e.preventDefault();
+  if (!currentAccount || !selectedBookingItem) { closePayment(); openAuth("login"); return; }
+  const days = Number(document.getElementById("rentDays").value);
+  const method = document.getElementById("paymentMethod").value;
+  if (extensionBookingId) {
+    const rental = rentals.find(r => r.id === extensionBookingId && r.email === currentAccount.email);
+    if (!rental) { showNotice("Could not find this rental to extend."); return; }
+    if (rental.extensionRequest && rental.extensionRequest.status === "Pending owner confirmation") { showNotice("An extension request is already pending."); return; }
+    const subtotal = Number(rental.price) * days;
+    const serviceFee = Math.round(subtotal * .05);
+    rental.extensionRequest = {id:"E"+Date.now()+Math.floor(Math.random()*1000), extraDays:days, subtotal, serviceFee, total:subtotal+serviceFee, paymentMethod:method, requestedAt:Date.now(), status:"Pending owner confirmation"};
+    try { localStorage.setItem("rentus-rentals", JSON.stringify(rentals)); }
+    catch { showNotice("Could not save the extension request in browser storage."); return; }
+    closePayment(); renderRentals(); showNotice("Extension payment demo recorded. Waiting for the owner to confirm."); openRentals(); setDashboard("renter"); return;
+  }
+  const startAt = Date.now();
+  const dueAt = startAt + days * 24 * 60 * 60 * 1000;
+  const booking = {
+    id: "R" + startAt + Math.floor(Math.random()*1000),
+    email: currentAccount.email, renterName:currentAccount.name, itemId:selectedBookingItem.id, itemName:selectedBookingItem.name,
+    owner:selectedBookingItem.owner || "Campus member", ownerEmail:selectedBookingItem.ownerEmail || "", ownerBank:selectedBookingItem.payoutBank || "Not set", ownerHolder:selectedBookingItem.payoutHolder || "Not set", ownerAccount:selectedBookingItem.payoutNumber || "Not set",
+    price:Number(selectedBookingItem.price), days, subtotal:Number(selectedBookingItem.price)*days,
+    serviceFee:Math.round(Number(selectedBookingItem.price)*days*0.05), platformCommission:Math.round(Number(selectedBookingItem.price)*days*0.15), ownerPayout:Number(selectedBookingItem.price)*days-Math.round(Number(selectedBookingItem.price)*days*0.15),
+    paymentMethod:method, total:Number(selectedBookingItem.price)*days+Math.round(Number(selectedBookingItem.price)*days*0.05), startAt, dueAt, status:"Booked (demo payment)", returnConfirmed:false, returnConfirmedByRenter:false, returnConfirmedByOwner:false
+  };
+  rentals.push(booking);
+  try { localStorage.setItem("rentus-rentals", JSON.stringify(rentals)); }
+  catch { showNotice("Could not save this booking in browser storage."); return; }
+  try { localStorage.setItem("rentus-owner-notice-" + (booking.ownerEmail || "unassigned"), JSON.stringify({bookingId:booking.id,seen:false,createdAt:Date.now()})); } catch {}
+  closePayment();
+  showNotice(`Demo booking created. Owner payout estimate: ${rupiah(booking.ownerPayout)} after the 15% platform commission.`);
+  renderRentals(); openRentals(); setDashboard("renter");
+});
+
+function formatRemaining(ms) {
+  if (ms <= 0) return "Return time reached — please contact the owner to arrange return.";
+  const totalSeconds = Math.floor(ms/1000);
+  const days = Math.floor(totalSeconds/86400);
+  const hours = Math.floor((totalSeconds%86400)/3600);
+  const minutes = Math.floor((totalSeconds%3600)/60);
+  const seconds = totalSeconds%60;
+  return `${days}d ${hours}h ${minutes}m ${seconds}s remaining`;
+}
+function setDashboard(which) {
+  const renter = which === "renter";
+  document.getElementById("renterPanel").hidden = !renter;
+  document.getElementById("ownerPanel").hidden = renter;
+  document.getElementById("renterTab").classList.toggle("active", renter);
+  document.getElementById("ownerTab").classList.toggle("active", !renter);
+  document.getElementById("renterTab").setAttribute("aria-selected", String(renter));
+  document.getElementById("ownerTab").setAttribute("aria-selected", String(!renter));
+}
+document.getElementById("renterTab").addEventListener("click", () => setDashboard("renter"));
+document.getElementById("ownerTab").addEventListener("click", () => setDashboard("owner"));
+function saveRentals() { try { localStorage.setItem("rentus-rentals", JSON.stringify(rentals)); } catch { showNotice("Could not save changes in browser storage."); } }
+function returnStatus(r) {
+  const renterConfirmed = !!(r.returnConfirmedByRenter || r.returnConfirmed);
+  const ownerConfirmed = !!(r.returnConfirmedByOwner || r.returnConfirmed);
+  return renterConfirmed && ownerConfirmed ? "Return confirmed by both" : renterConfirmed ? "Renter confirmed · waiting for owner" : ownerConfirmed ? "Owner confirmed · waiting for renter" : Date.now() >= r.dueAt ? "Return time reached" : "Active rental";
+}
+function renderRentals() {
+  const list = document.getElementById("rentalsList");
+  const ownerList = document.getElementById("ownerRequestsList");
+  const mine = rentals.filter(r => currentAccount && r.email === currentAccount.email).sort((a,b)=>b.startAt-a.startAt);
+  const incoming = rentals.filter(r => currentAccount && r.ownerEmail === currentAccount.email).sort((a,b)=>b.startAt-a.startAt);
+  if (!incoming.length) {
+    ownerList.innerHTML = `<div class="empty-state"><strong>No incoming rental requests yet</strong><p>When someone books one of your listed items, requests and return/extension confirmations will appear here.</p></div>`;
+  } else {
+    ownerList.innerHTML = incoming.map(r => {
+      const renterConfirmed = !!(r.returnConfirmedByRenter || r.returnConfirmed);
+      const ownerConfirmed = !!(r.returnConfirmedByOwner || r.returnConfirmed);
+      const ext = r.extensionRequest;
+      return `<article class="owner-request"><h4>🔔 Rental: ${escapeHTML(r.itemName)}</h4>
+      <div class="summary-line"><span>Renter</span><strong>${escapeHTML(r.renterName || r.email)}</strong></div>
+      <div class="summary-line"><span>Current rental period</span><strong>${r.days} day(s), due ${new Date(r.dueAt).toLocaleString()}</strong></div>
+      <div class="summary-line"><span>Rental subtotal</span><strong>${rupiah(r.subtotal ?? r.price*r.days)}</strong></div>
+      <div class="summary-line"><span>Platform commission (15%)</span><strong>− ${rupiah(r.platformCommission ?? Math.round(r.price*r.days*.15))}</strong></div>
+      <div class="summary-line"><span>Estimated amount to you</span><strong>${rupiah(r.ownerPayout ?? (r.price*r.days-Math.round(r.price*r.days*.15)))}</strong></div>
+      <div class="summary-line"><span>Return status</span><strong>${returnStatus(r)}</strong></div>
+      <div class="fee-note">RentUs deducts 15% of the rental subtotal from the owner's payout. This is a demo estimate, not a real transfer.</div>
+      ${ext ? `<div class="bank-details"><h4>Extension request</h4><div class="summary-line"><span>Extra days requested</span><strong>${ext.extraDays}</strong></div><div class="summary-line"><span>Extension subtotal</span><strong>${rupiah(ext.subtotal)}</strong></div><div class="summary-line"><span>Service fee (5%)</span><strong>${rupiah(ext.serviceFee)}</strong></div><div class="summary-line"><span>Payment status</span><strong>${escapeHTML(ext.status)}</strong></div>${ext.status === "Pending owner confirmation" ? `<button type="button" class="action-button action-primary" data-approve-extension="${escapeHTML(r.id)}">Confirm extension</button>` : ""}</div>` : ""}
+      <div class="bank-details"><strong>Payout account saved on listing</strong><div class="summary-line"><span>Bank / e-wallet</span><strong>${escapeHTML(r.ownerBank || "Not set")}</strong></div><div class="summary-line"><span>Account holder</span><strong>${escapeHTML(r.ownerHolder || "Not set")}</strong></div><div class="summary-line"><span>Account number / ID</span><strong>${escapeHTML(r.ownerAccount || "Not set")}</strong></div></div>
+      <div class="bank-details"><strong>Return confirmation</strong><p class="payment-method-note">Renter: ${renterConfirmed ? "confirmed" : "not confirmed yet"} · Owner: ${ownerConfirmed ? "confirmed" : "not confirmed yet"}</p>${!ownerConfirmed ? `<button type="button" class="action-button action-secondary" data-owner-return="${escapeHTML(r.id)}">Confirm item returned</button>` : ""}</div></article>`;
+    }).join("");
+  }
+  if (!mine.length) { list.innerHTML = `<div class="empty-state"><strong>No rentals yet</strong><p>Choose an item and confirm a demo booking to see its return timer here.</p></div>`; }
+  else {
+    const now = Date.now();
+    list.innerHTML = mine.map(r => {
+      const renterConfirmed = !!(r.returnConfirmedByRenter || r.returnConfirmed);
+      const ownerConfirmed = !!(r.returnConfirmedByOwner || r.returnConfirmed);
+      const ext = r.extensionRequest;
+      return `<article class="rental-card"><h3>${escapeHTML(r.itemName)}</h3><div class="summary-line"><span>Booking ID</span><strong>${escapeHTML(r.id)}</strong></div>
+      <div class="summary-line"><span>Rental period</span><strong>${new Date(r.startAt).toLocaleString()} – ${new Date(r.dueAt).toLocaleString()}</strong></div><div class="summary-line"><span>Duration</span><strong>${r.days} day${r.days===1?"":"s"}</strong></div>
+      <div class="summary-line"><span>Rental subtotal</span><strong>${rupiah(r.subtotal ?? r.price*r.days)}</strong></div><div class="summary-line"><span>Service fee (5%)</span><strong>${rupiah(r.serviceFee ?? 0)}</strong></div><div class="summary-line"><span>Total (demo)</span><strong>${rupiah(r.total)}</strong></div>
+      <span class="rental-status">${escapeHTML(returnStatus(r))}</span><div class="countdown" data-countdown="${escapeHTML(r.id)}">${renterConfirmed && ownerConfirmed ? "Item return has been confirmed by both sides." : formatRemaining(r.dueAt-now)}</div>
+      ${!renterConfirmed ? `<button type="button" class="action-button action-secondary" data-renter-return="${escapeHTML(r.id)}">Confirm item returned</button>` : ""}
+      ${!r.returnConfirmed && !renterConfirmed && !ownerConfirmed && !(ext && ext.status === "Pending owner confirmation") ? `<button type="button" class="action-button action-primary" data-extend-rental="${escapeHTML(r.id)}">＋ Extend rental</button>` : (ext && ext.status === "Pending owner confirmation" ? `<p class="payment-method-note">Extension request for ${ext.extraDays} extra day(s) is waiting for the owner.</p>` : "")}
+      ${ext && ext.status !== "Pending owner confirmation" ? `<div class="summary-line"><span>Latest extension</span><strong>${escapeHTML(ext.status)}</strong></div>` : ""}</article>`;
+    }).join("");
+  }
+  list.querySelectorAll("[data-renter-return]").forEach(button => button.addEventListener("click", () => {
+    const r = rentals.find(x => x.id === button.dataset.renterReturn && x.email === currentAccount?.email); if (!r) return;
+    r.returnConfirmedByRenter = true; r.returnConfirmed = !!r.returnConfirmedByOwner; r.status = r.returnConfirmed ? "Return confirmed by both" : "Renter confirmed return"; saveRentals(); renderRentals(); showNotice(r.returnConfirmed ? "Return confirmed by both sides." : "You confirmed the return. Waiting for the owner to confirm too.");
+  }));
+  ownerList.querySelectorAll("[data-owner-return]").forEach(button => button.addEventListener("click", () => {
+    const r = rentals.find(x => x.id === button.dataset.ownerReturn && x.ownerEmail === currentAccount?.email); if (!r) return;
+    r.returnConfirmedByOwner = true; r.returnConfirmed = !!r.returnConfirmedByRenter; r.status = r.returnConfirmed ? "Return confirmed by both" : "Owner confirmed return"; saveRentals(); renderRentals(); showNotice(r.returnConfirmed ? "Return confirmed by both sides." : "You confirmed the return. Waiting for the renter to confirm too.");
+  }));
+  list.querySelectorAll("[data-extend-rental]").forEach(button => button.addEventListener("click", () => {
+    const r = rentals.find(x => x.id === button.dataset.extendRental && x.email === currentAccount?.email); if (r) openExtensionPayment(r);
+  }));
+  ownerList.querySelectorAll("[data-approve-extension]").forEach(button => button.addEventListener("click", () => {
+    const r = rentals.find(x => x.id === button.dataset.approveExtension && x.ownerEmail === currentAccount?.email); if (!r || !r.extensionRequest || r.extensionRequest.status !== "Pending owner confirmation") return;
+    const ext = r.extensionRequest; const extraMs = ext.extraDays * 24 * 60 * 60 * 1000;
+    r.dueAt += extraMs; r.days += ext.extraDays; r.subtotal = Number(r.subtotal ?? r.price*(r.days-ext.extraDays)) + ext.subtotal; r.serviceFee = Number(r.serviceFee || 0) + ext.serviceFee; r.total = Number(r.total || 0) + ext.total;
+    r.platformCommission = Math.round(r.subtotal*.15); r.ownerPayout = r.subtotal-r.platformCommission; ext.status = "Confirmed by owner"; ext.confirmedAt = Date.now(); r.status = "Extension confirmed by owner";
+    saveRentals(); renderRentals(); showNotice("Extension approved. The rental deadline has been updated.");
+  }));
+}
+
+function updateCountdowns() {
+  document.querySelectorAll("[data-countdown]").forEach(el => {
+    const rental = rentals.find(r => r.id === el.dataset.countdown);
+    if (rental) {
+      if ((rental.returnConfirmedByRenter && rental.returnConfirmedByOwner) || rental.returnConfirmed) { el.textContent = "Item return has been confirmed by both sides."; return; }
+      el.textContent = formatRemaining(rental.dueAt-Date.now());
+      const status = el.parentElement.querySelector(".rental-status");
+      if (status && Date.now() >= rental.dueAt) status.textContent = "Return time reached";
+    }
+  });
+}
+function openRentals() {
+  if (!currentAccount) { openAuth("login"); return; }
+  renderRentals(); rentalsModal.classList.add("open");
+  if (rentalTicker) clearInterval(rentalTicker);
+  rentalTicker = setInterval(updateCountdowns, 1000);
+}
+function closeRentals() { rentalsModal.classList.remove("open"); if (rentalTicker) clearInterval(rentalTicker); rentalTicker=null; }
+document.getElementById("myRentalsBtn").addEventListener("click", openRentals);
+document.getElementById("closeRentals").addEventListener("click", closeRentals);
+rentalsModal.addEventListener("click", e => { if (e.target === rentalsModal) closeRentals(); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeAuth(); closePayment(); closeRentals(); }
+});
+
+applyTheme();
+applyLanguage();
+updateAccountButton();
+renderItems();
+</script>
+</body>
+</html>
