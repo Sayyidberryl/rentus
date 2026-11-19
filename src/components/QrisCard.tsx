@@ -37,7 +37,7 @@ export function QrisCard({ settings, amount, referenceLabel }: QrisCardProps) {
             </span>
             <div className="min-w-0">
               <div className="text-xs font-extrabold tracking-wider text-[var(--blue)] uppercase">
-                QRIS {isCustomImage ? "Official" : "Dummy / Sandbox"}
+                QRIS {isCustomImage ? "Official" : "Standar"}
               </div>
               <div className="truncate text-sm font-bold text-[var(--ink)]">
                 {settings.qris_merchant_name}
@@ -64,11 +64,8 @@ export function QrisCard({ settings, amount, referenceLabel }: QrisCardProps) {
             />
           ) : (
             <div className="flex w-full max-w-[216px] flex-col items-center">
-              <div className="mb-2 flex w-full items-center justify-between gap-2 text-[10px] font-bold tracking-wide text-slate-500 uppercase sm:text-[11px]">
+              <div className="mb-2 flex w-full items-center justify-center text-[10px] font-bold tracking-wide text-slate-500 uppercase sm:text-[11px]">
                 <span className="truncate">QRIS STANDAR NASIONAL</span>
-                <span className="inline-flex shrink-0 items-center justify-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] leading-none text-slate-700">
-                  DUMMY
-                </span>
               </div>
               <QRCodeSVG
                 value={payload}

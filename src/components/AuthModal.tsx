@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Info, KeyRound, ShieldCheck, X } from "lucide-react";
+import { Info, X } from "lucide-react";
 import { usePreferences } from "@/components/PreferencesProvider";
 import { createClient } from "@/lib/supabase/client";
 
@@ -76,13 +76,6 @@ export function AuthModal({
     }
   };
 
-  const fillDemo = (demoEmail: string, demoPass: string) => {
-    setMode("login");
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setErrorMsg(null);
-  };
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-xs"
@@ -153,7 +146,7 @@ export function AuthModal({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@rentus.id"
+              placeholder="email@domain.com"
               className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface-subtle)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none focus:border-[var(--blue)]"
             />
           </div>
@@ -168,6 +161,7 @@ export function AuthModal({
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
               className="w-full rounded-xl border border-[var(--line)] bg-[var(--surface-subtle)] px-3 py-2.5 text-sm text-[var(--ink)] outline-none focus:border-[var(--blue)]"
             />
           </div>
@@ -210,49 +204,6 @@ export function AuthModal({
             {mode === "login" ? t.auth.switchToSignup : t.auth.switchToLogin}
           </button>
         </div>
-
-        {/* Collapsible RBAC Demo Credentials Drawer */}
-        <details className="mt-5 rounded-2xl border border-[var(--line)] bg-[var(--surface-subtle)] p-3 text-xs">
-          <summary className="flex cursor-pointer items-center gap-2 font-extrabold text-[var(--ink)]">
-            <KeyRound className="h-3.5 w-3.5 text-[var(--blue)]" />
-            {t.auth.demoTitle}
-          </summary>
-          <p className="mt-2 text-[11px] text-[var(--muted)]">{t.auth.demoHint}</p>
-          <div className="mt-2.5 grid gap-1.5">
-            <button
-              type="button"
-              onClick={() => fillDemo("admin@rentus.id", "RentUsAdmin2026!")}
-              className="flex items-center justify-between gap-2 rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-left transition hover:border-[var(--blue)]"
-            >
-              <span className="flex shrink-0 items-center gap-1.5 font-bold text-[var(--ink)]">
-                <ShieldCheck className="h-3.5 w-3.5 text-amber-500" /> Admin
-              </span>
-              <span className="font-mono-num min-w-0 truncate text-[11px] text-[var(--muted)]">
-                admin@rentus.id
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemo("staff@rentus.id", "RentUsStaff2026!")}
-              className="flex items-center justify-between gap-2 rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-left transition hover:border-[var(--blue)]"
-            >
-              <span className="shrink-0 font-bold text-[var(--ink)]">Staff Operator</span>
-              <span className="font-mono-num min-w-0 truncate text-[11px] text-[var(--muted)]">
-                staff@rentus.id
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemo("owner@rentus.id", "RentUsOwner2026!")}
-              className="flex items-center justify-between gap-2 rounded-xl border border-[var(--line)] bg-[var(--paper)] px-3 py-2 text-left transition hover:border-[var(--blue)]"
-            >
-              <span className="shrink-0 font-bold text-[var(--ink)]">Owner / Mitra</span>
-              <span className="font-mono-num min-w-0 truncate text-[11px] text-[var(--muted)]">
-                owner@rentus.id
-              </span>
-            </button>
-          </div>
-        </details>
       </div>
     </div>
   );

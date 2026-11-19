@@ -1411,8 +1411,8 @@ export function AdminConsoleClient({
                   <h3 className="flex items-center gap-2 text-base font-extrabold text-[var(--ink)]">
                     <QrCode className="h-4 w-4 text-[var(--blue)]" />
                     {language === "id"
-                      ? "Pengaturan QRIS Pembayaran (Dummy / Upload Gambar QRIS Asli)"
-                      : "QRIS Payment Configurator (Dummy / Upload Real QRIS)"}
+                      ? "Pengaturan QRIS Pembayaran (Generator QRIS / Upload Gambar QRIS Asli)"
+                      : "QRIS Payment Configurator (QRIS Generator / Upload Real QRIS)"}
                   </h3>
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -1429,7 +1429,7 @@ export function AdminConsoleClient({
                       }`}
                     >
                       <div className="text-xs font-extrabold text-[var(--ink)]">
-                        {language === "id" ? "Mode QRIS Dummy Otomatis" : "Dynamic Dummy QRIS"}
+                        {language === "id" ? "Mode Generator QRIS Otomatis" : "Dynamic QRIS Generator"}
                       </div>
                       <div className="mt-0.5 text-[11px] text-[var(--muted)]">
                         {language === "id"

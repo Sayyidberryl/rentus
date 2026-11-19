@@ -1,6 +1,6 @@
 # RentUs — Platform Rental Kampus & Komunitas (Next.js + Supabase RBAC)
 
-**RentUs** adalah platform sewa barang berbasis **Next.js (App Router)** dan **Supabase (Postgres, Auth, Storage, RLS, RPC)** yang siap dideploy ke **Vercel**. Dirancang **mobile-first** dengan dukungan **Zero-Login Guest Borrowing** (peminjam cukup mengisi data diri saat menyewa tanpa wajib membuat akun), **pembayaran QRIS fleksibel** (QRIS dummy otomatis atau upload QRIS resmi di panel admin), **WhatsApp Admin dinamis**, **RBAC penuh**, **Light/Dark mode**, serta dwibahasa **Indonesia & Inggris (`ID`/`EN`)**.
+**RentUs** adalah platform sewa barang berbasis **Next.js (App Router)** dan **Supabase (Postgres, Auth, Storage, RLS, RPC)** yang siap dideploy ke **Vercel**. Dirancang **mobile-first** dengan dukungan **Zero-Login Guest Borrowing** (peminjam cukup mengisi data diri saat menyewa tanpa wajib membuat akun), **pembayaran QRIS fleksibel** (generator QRIS otomatis atau upload QRIS resmi di panel admin), **WhatsApp Admin dinamis**, **RBAC penuh**, **Light/Dark mode**, serta dwibahasa **Indonesia & Inggris (`ID`/`EN`)**.
 
 > 📘 **Dokumentasi Lengkap**: Baca [**`PANDUAN_FITUR.md`**](./PANDUAN_FITUR.md) untuk daftar lengkap semua fitur, detail 5 role & 17 permission RBAC, serta panduan penggunaan langkah demi langkah untuk Peminjam, Mitra, Staff, dan Admin.
 
@@ -11,7 +11,7 @@
 - **Pinjam Barang Tanpa Login (Guest Checkout)**: Peminjam memilih barang, mengisi data diri (`Nama`, `WhatsApp`, `KTM/KTP/SIM/Paspor`, `Alamat`), melihat kalkulasi biaya sewa + biaya layanan + deposit, memilih metode **QRIS** atau **Transfer Bank/E-Wallet**, mengunggah bukti bayar, dan langsung mendapat **Kode Booking** (`RNT-XXXXXX`).
 - **Lacak Sewa Lintas Perangkat (`Sewa Saya`)**: Cek status pesanan memakai **Kode Booking + No. WA/Email**, lihat timer pengembalian **live tiap 1 detik**, kirim bukti transfer susulan, ajukan perpanjangan hari sewa, konfirmasi pengembalian barang, dan hubungi WhatsApp Admin dalam 1 klik.
 - **Konfigurator QRIS & WhatsApp Admin (`/admin`)**:
-  - **2 Mode QRIS**: *QRIS Dummy Otomatis* (dibentuk dinamis dari Nama Merchant & NMID) atau *Upload Gambar QRIS Resmi* (`PNG/JPG/WEBP` ke bucket `qris-images`).
+  - **2 Mode QRIS**: *Generator QRIS Otomatis* (dibentuk dinamis dari Nama Merchant & NMID) atau *Upload Gambar QRIS Resmi* (`PNG/JPG/WEBP` ke bucket `qris-images`).
   - Ubah **Nomor WhatsApp Admin**, nama tampilan admin, nama platform/toko, titik pengambilan utama, biaya layanan peminjam (%), komisi platform mitra (%), serta daftar rekening Bank/E-Wallet secara langsung.
 - **CRUD Barang & Panel Mitra (`/dashboard` & `/admin`)**:
   - Admin mengelola seluruh katalog barang (CRUD penuh, upload foto ke `item-images`, penyesuaian stok cepat `-` / `+`, dan aktivasi listing).
@@ -28,7 +28,7 @@
 | Route | Deskripsi | Akses |
 | :--- | :--- | :--- |
 | `/` | Etalase utama, kategori, pencarian, favorit, checkout guest, pelacak `Sewa Saya` | Publik (`guest` & semua role) |
-| `/login` | Halaman masuk Staff/Admin/Mitra, daftar akun Mitra, dan pengisi cepat akun demo | Publik |
+| `/login` | Halaman masuk Staff/Admin/Mitra dan pendaftaran akun Mitra | Publik |
 | `/dashboard` | Panel Mitra (`Barang Saya` CRUD & `Sewa Masuk` + payout bersih) | Login (`owner`, `staff`, `admin`) |
 | `/admin` | Konsol Operasional (6 tab: Ringkasan, Pesanan & QRIS, CRUD Barang, Pengaturan WA & QRIS, RBAC, Audit Log) | Login (`staff`, `admin`) |
 
@@ -79,15 +79,18 @@ npm run build
 
 ---
 
-## Akun Uji Coba RBAC (Halaman `/login`)
+## Akses Akun & Peran Pengguna (RBAC)
 
-| Role | Level | Email | Password | Akses Utama |
-| :--- | :---: | :--- | :--- | :--- |
-| **Super Admin** (`admin`) | 100 | `admin@rentus.id` | `RentUsAdmin2026!` | Akses penuh `/admin` (6 tab) & `/dashboard` |
-| **Staff Operator** (`staff`) | 70 | `staff@rentus.id` | `RentUsStaff2026!` | Verifikasi QRIS, status pesanan, atur ketersediaan barang |
-| **Owner / Mitra** (`owner`) | 40 | `owner@rentus.id` | `RentUsOwner2026!` | Kelola barang & pesanan milik sendiri di `/dashboard` |
+RentUs menggunakan sistem otentikasi Supabase Auth dengan otorisasi berbasis Role (RBAC):
 
-> Untuk menguji pelacakan sewa guest tanpa login lewat tombol **Sewa Saya**, gunakan kode demo `RNT-DEMO01` (WA `6281223344556`) atau `RNT-DEMO02` (WA `6285711229900`).
+| Role | Level | Akses Utama |
+| :--- | :---: | :--- |
+| **Super Admin** (`admin`) | 100 | Akses penuh `/admin` (Ringkasan, Pesanan & QRIS, CRUD Barang, Pengaturan Toko & WA/QRIS, RBAC User, Audit Log) & `/dashboard` |
+| **Staff Operator** (`staff`) | 70 | Akses operasional `/admin` (Verifikasi QRIS, update status pesanan, atur ketersediaan & stok barang) |
+| **Owner / Mitra** (`owner`) | 40 | Akses `/dashboard` untuk mengelola barang titipan sendiri & memantau pesanan masuk serta estimasi payout |
+| **Guest / Peminjam** | 0 | Akses etalase publik (`/`), peminjaman tanpa login, dan pelacakan pesanan via **Sewa Saya** memakai Kode Booking resmi |
+
+> Pengguna baru yang ingin menjadi mitra dapat langsung mendaftar via tombol **Daftar sebagai Mitra** di modal login. Akun Admin dan Staff dikelola langsung oleh administrator melalui konsol `/admin` (tab RBAC) atau Supabase Dashboard.
 
 ---
 
@@ -98,7 +101,7 @@ src/
 ├── proxy.ts                         # Middleware sesi Supabase SSR
 ├── app/
 │   ├── page.tsx                     # SSR halaman etalase utama (/)
-│   ├── login/page.tsx               # Halaman autentikasi & demo akun RBAC
+│   ├── login/page.tsx               # Halaman autentikasi pengguna (Admin, Staff, Mitra)
 │   ├── dashboard/page.tsx           # SSR Panel Mitra (/dashboard)
 │   ├── admin/page.tsx               # SSR Konsol Admin & Staff (/admin)
 │   └── api/

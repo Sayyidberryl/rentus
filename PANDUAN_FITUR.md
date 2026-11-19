@@ -16,7 +16,7 @@ Dokumen ini menjelaskan seluruh fitur yang tersedia di aplikasi **RentUs**, pemb
    - [D. Untuk Staff Operator (`/admin`)](#d-untuk-staff-operator-admin)
    - [E. Untuk Super Admin (`/admin`) — Termasuk Ubah No. WA & QRIS](#e-untuk-super-admin-admin--termasuk-ubah-no-wa--qris)
 5. [Status Pesanan, Pembayaran & Alur Pengembalian Stok](#5-status-pesanan-pembayaran--alur-pengembalian-stok)
-6. [Akun Demo & Kode Booking Uji Coba](#6-akun-demo--kode-booking-uji-coba)
+6. [Panduan Akun Akses & Kode Booking](#6-panduan-akun-akses--kode-booking)
 
 ---
 
@@ -62,7 +62,7 @@ Dokumen ini menjelaskan seluruh fitur yang tersedia di aplikasi **RentUs**, pemb
    - Mengatur **jumlah unit** (`1` s/d stok tersedia) dan **lama sewa** (`1` s/d `max_days` barang).
    - Kalkulasi rincian biaya otomatis: `Subtotal sewa + Biaya layanan platform (%) + Deposit jaminan = Total bayar`.
    - Pengisian identitas peminjam: Nama lengkap, No. WhatsApp, Email (opsional), Jenis Identitas (`KTM`, `KTP`, `SIM`, `PASSPORT`), Nomor Identitas, Alamat/Kos/Asrama, dan Catatan tambahan.
-   - Pembayaran via **QRIS** (mendukung **QRIS Dummy Otomatis** dengan payload NMID atau **Gambar QRIS Asli** hasil upload admin + tombol **Perbesar/Zoom QR**) maupun metode transfer **Bank / E-Wallet** sesuai pengaturan admin.
+   - Pembayaran via **QRIS** (mendukung **Generator QRIS Otomatis** dengan payload NMID atau **Gambar QRIS Asli** hasil upload admin + tombol **Perbesar/Zoom QR**) maupun metode transfer **Bank / E-Wallet** sesuai pengaturan admin.
    - Upload gambar bukti pembayaran langsung ke bucket `payment-proofs` + kolom opsional referensi pembayaran.
    - Menghasilkan **Kode Booking unik** (format `RNT-XXXXXX`) dan **Tracking Token** yang tersimpan otomatis di browser.
 7. **Pelacak Sewa Lintas Perangkat (`Sewa Saya`)**:
@@ -100,7 +100,7 @@ Dokumen ini menjelaskan seluruh fitur yang tersedia di aplikasi **RentUs**, pemb
 4. **Tab 4 — Pengaturan WA Admin & QRIS (`Settings`)**:
    - Mengubah **Nomor WhatsApp Admin** (+ link tes `wa.me`), **Nama Tampilan Admin**, **Nama Platform/Toko**, **Titik Pengambilan Utama**, **Biaya Layanan Peminjam (%)**, dan **Komisi Platform Mitra (%)**.
    - Mengatur mode pembayaran QRIS:
-     - **QRIS Dummy Otomatis** (isi **Nama Merchant QRIS** & **NMID**, QR langsung terbentuk otomatis + preview).
+     - **Generator QRIS Otomatis** (isi **Nama Merchant QRIS** & **NMID**, QR langsung terbentuk otomatis + preview).
      - **Upload Gambar QRIS Resmi** (unggah file `PNG/JPG/WEBP` ke bucket `qris-images` atau tempel URL gambar QRIS).
    - Mengelola **Daftar Rekening Bank & E-Wallet** (tambah, ubah kode/label/no. rekening/atas nama, atau hapus metode selain `QRIS`).
    - Live preview kartu QRIS di sisi kanan layar sebelum disimpan.
@@ -210,9 +210,9 @@ Login menggunakan akun `admin` lalu masuk ke **`/admin`**:
    - Ubah kolom **Nomor WhatsApp Admin** (format diawali kode negara, contoh `6281234567890`). Klik link **`wa.me/...`** di bawah input untuk langsung mengetes tautan WA.
    - Sesuaikan **Nama Tampilan Admin**, **Nama Platform / Toko**, **Titik Pengambilan Utama**, **Biaya Layanan Peminjam (%)**, dan **Komisi Platform Mitra (%)**, lalu klik **Simpan Pengaturan**.
    - Perubahan langsung berlaku untuk semua tombol WhatsApp dan perhitungan checkout di etalase publik.
-2. **Mengganti QRIS Dummy dengan Gambar QRIS Asli**:
+2. **Mengatur Mode Generator QRIS Otomatis atau Upload Gambar QRIS Asli**:
    - Masih di tab **Pengaturan WA Admin & QRIS**, pilih kartu mode:
-     - **`Mode QRIS Dummy Otomatis`**: Isi **Nama Merchant QRIS** dan **NMID** untuk menghasilkan QR code dinamis otomatis.
+     - **`Mode Generator QRIS Otomatis`**: Isi **Nama Merchant QRIS** dan **NMID** untuk menghasilkan QR code dinamis otomatis.
      - **`Mode Upload Gambar QRIS`**: Klik **`Upload Gambar QRIS`** (pilih file PNG/JPG/WEBP untuk diunggah ke Supabase Storage `qris-images`) atau tempel URL gambar QRIS Anda, lalu cek kotak **Live Preview QRIS** di sebelah kanan.
    - Klik **Simpan Pengaturan** agar halaman checkout & modal pembayaran langsung menampilkan QRIS terbaru.
 3. **Mengatur Daftar Rekening Bank & E-Wallet**:
@@ -248,18 +248,16 @@ Login menggunakan akun `admin` lalu masuk ke **`/admin`**:
 
 ---
 
-## 6. Akun Demo & Kode Booking Uji Coba
+## 6. Panduan Akun Akses & Kode Booking
 
-### Akun Login (`/login`)
-Di halaman `/login`, buka bagian **Akun Uji Coba RBAC** untuk mengisi email & password otomatis dalam 1 klik:
+### Autentikasi Pengguna & Akses Role (`/login`)
+Akses masuk web RentUs diperuntukkan bagi pengelola operasional dan pemilik barang titipan:
+- **Admin & Staff**: Menggunakan akun resmi yang didaftarkan oleh Administrator melalui konsol `/admin` (tab RBAC) atau Supabase Dashboard.
+- **Mitra Pemilik Barang**: Dapat langsung mendaftar secara mandiri melalui tombol **Daftar sebagai Mitra** di modal login.
+- **Peminjam Umum (Guest)**: Tidak memerlukan akun atau kata sandi untuk menyewa maupun melacak barang.
 
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Super Admin** (`admin`) | `admin@rentus.id` | `RentUsAdmin2026!` |
-| **Staff Operator** (`staff`) | `staff@rentus.id` | `RentUsStaff2026!` |
-| **Owner / Mitra** (`owner`) | `owner@rentus.id` | `RentUsOwner2026!` |
+### Kode Booking & Pelacakan Sewa
+Setiap transaksi sewa yang berhasil dibuat akan menghasilkan **Kode Booking resmi** (format: `RNT-XXXXXX`) dan **Tracking Token**:
+1. Peminjam yang menggunakan perangkat yang sama dapat langsung memantau pesanan melalui tombol **Sewa Saya** di navbar.
+2. Untuk melacak dari perangkat lain, buka **Sewa Saya** → form **Lacak Pesanan dari Perangkat Lain**, lalu masukkan **Kode Booking** dan **No. WhatsApp atau Email** yang digunakan saat checkout.
 
-### Kode Booking Demo (Untuk Uji Coba Fitur Lacak Sewa Tanpa Login)
-Buka modal **Sewa Saya** di halaman `/`, lalu masukkan salah satu kombinasi berikut pada form **Lacak Pesanan dari Perangkat Lain**:
-- Kode: `RNT-DEMO01` · No. WhatsApp: `6281223344556` *(status menunggu verifikasi pembayaran QRIS)*
-- Kode: `RNT-DEMO02` · No. WhatsApp: `6285711229900` *(status sedang disewa aktif dengan timer pengembalian live)*
